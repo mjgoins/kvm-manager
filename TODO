@@ -1,0 +1,18 @@
+TODO for KVM-Manager
+--------------------
+
+(much) better documentation
+
+file re-organization/restructuring
+
+debian packaging?
+
+more flexibility with networking (currently only supports
+   tun/tap-style bridging)
+
+/usr/local/sbin is hard-coded in places (e.g. in the run and finish
+   scripts); it probably shouldn't be.
+
+screen logging is still sub-par, and could potentially fill the host
+   disks if the kernel spew is immense -- rotate?  filter through
+   svlogd somehow?  same problem as cereal.

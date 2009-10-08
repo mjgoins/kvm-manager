@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+# Date: 2009-10-08
+# License: GPL v3+
+
+set -e
+
+# depends on grub2 -- should probably be refactored to use
+# grub-mkrescue
+
+WORKDIR=$(mktemp -d)
+
+( cd "$WORKDIR" && wget http://ftp.nl.debian.org/debian/dists/lenny/main/installer-amd64/current/images/netboot/debian-installer/amd64/{linux,initrd.gz} )
+
+mkdir -p "$WORKDIR/boot/grub"
+
+cp /usr/lib/grub/x86_64-pc/stage2_eltorito "$WORKDIR/boot/grub/"
+cat > "$WORKDIR/boot/grub/menu.lst" <<EOF
+serial --unit=0 --speed=115200 --word=8 --parity=no --stop=1
+terminal serial
+
+title lenny d-i (created $(date -R))
+kernel /linux -- console=ttyS0,115200n8
+initrd /initrd.gz
+EOF
+
+genisoimage -R -input-charset utf-8 -b boot/grub/stage2_eltorito -no-emul-boot --boot-load-size 4 -boot-info-table "$WORKDIR"
+
+rm -rf "$WORKDIR"

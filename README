@@ -1,0 +1,32 @@
+KVM-Manager
+
+Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+Date: 2009-10-08 11:22:14-0400
+
+This is a small set of scripts to make it relatively easy to manage a
+stable of kvm instances in a fairly secure and isolated fashion.
+
+The basic model is to use runit to supervise each KVM instance, with a
+single, non-privileged user account for each instance.
+
+A typical workflow to start an installer is:
+
+kvm-creator create $GUESTNAME [$DISKSIZE [$RAM [$TAP [$MAC] ] ] ]
+# set up boot media for the host ("put the installer CD in the drive"):
+ln -s /usr/local/share/ISOs/d-i.iso /home/$GUESTNAME/vms/$GUESTNAME/cd.iso
+# set up access to the account:
+mkdir -p /home/$GUESTNAME/.ssh
+cat ~/.ssh/authorized_keys >> /home/$GUESTNAME/.ssh/authorized_keys
+# start up the host
+update-service --add /etc/sv/kvm/$GUESTNAME
+
+
+To access the guest's serial console, do:
+
+   ssh -t $GUESTNAME@host.machine screen -x $GUESTNAME
+
+
+trouble getting a serial console-enabled debian
+installer ISO?  try using the di-maker script.
+
+All patches, fixes, suggestions welcome!

@@ -1,0 +1,75 @@
+#!/bin/bash
+set -x
+
+# Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+# Date: 2009-10-08
+# License: GPL v3+
+
+CMD="$1"
+shift
+
+NAME="$1"
+SIZE="${2:-3G}"
+RAM="${3:-512}"
+TAP="${4:-$(( $( cat /etc/sv/kvm/*/env/TAP | sed 's/^tap//' | sort -n  | tail -n 1 ) + 1 ))}"
+MAC="${5:-$(cat /etc/sv/kvm/*/env/MAC | head -n1 | cut -f 1-5 -d: ):$(( $( cat /etc/sv/kvm/*/env/MAC | cut -f 6 -d:  | sort -n  | tail -n 1 ) + 1 ))}"
+
+VG=vg_malty0
+
+destroy() {
+
+    update-service --remove "/etc/sv/kvm/$NAME"
+    rm -rf "/etc/sv/kvm/$NAME"
+    deluser "$NAME"
+    lvremove "$VG/$NAME"
+    rm -rf "/home/$NAME"
+
+}
+
+create() {
+    set -e
+
+# FIXME: check that this stuff doesn't exist yet:
+
+    adduser "$NAME" --disabled-password --gecos "$NAME KVM user,,,"
+    mkdir "/home/$NAME/"{.ssh,vms,"vms/$NAME"}
+    touch "/home/$NAME/vms/$NAME/netboot"
+    chown "$NAME:$NAME" "/home/$NAME/"{.ssh,vms,"vms/$NAME","vms/$NAME/netboot"}
+    cp /root/.ssh/authorized_keys "/home/$NAME/.ssh/"
+    lvcreate --name "$NAME" --size "$SIZE" $VG
+    mkdir "/etc/sv/kvm/$NAME"{,/log,/env}
+    cat > "/etc/sv/kvm/$NAME/log/run" <<EOF
+#!/bin/sh
+
+exec 2>&1
+exec chpst -e ../env /usr/local/sbin/kvm-manager log
+EOF
+    cat > "/etc/sv/kvm/$NAME/run" <<EOF
+#!/bin/sh
+
+exec 2>&1
+exec chpst -e ./env /usr/local/sbin/kvm-manager up
+EOF
+    cat > "/etc/sv/kvm/$NAME/finish" <<EOF
+#!/bin/sh
+
+exec 2>&1
+exec chpst -e ./env /usr/local/sbin/kvm-manager down
+EOF
+    chmod a+x "/etc/sv/kvm/$NAME/"{run,finish,log/run}
+    echo "$NAME" > "/etc/sv/kvm/$NAME/env/OWNER"
+    echo "$NAME" > "/etc/sv/kvm/$NAME/env/VMNAME"
+    echo "$TAP" > "/etc/sv/kvm/$NAME/env/TAP"
+    echo "$RAM" > "/etc/sv/kvm/$NAME/env/RAM"
+    echo "$MAC" > "/etc/sv/kvm/$NAME/env/MAC"
+
+}
+
+demo() {
+
+    for foo in NAME TAP RAM MAC SIZE ; do
+	echo "$foo : ${!foo}"
+    done
+}
+
+"$CMD"
