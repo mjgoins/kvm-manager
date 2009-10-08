@@ -9,6 +9,17 @@ stable of kvm instances in a fairly secure and isolated fashion.
 The basic model is to use runit to supervise each KVM instance, with a
 single, non-privileged user account for each instance.
 
+Dependencies:
+
+ runit : for system supervision
+ uml-utilities : for tunctl for the tun/tap interface
+ kvm : for the virtual machine emulator
+ screen : for the detached, logged serial console
+
+Recommendations:
+
+ openssh-server : i've been using ssh to access the vm's serial console
+
 A typical workflow to start an installer is:
 
 kvm-creator create $GUESTNAME [$DISKSIZE [$RAM [$TAP [$MAC] ] ] ]
