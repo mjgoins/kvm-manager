@@ -30,7 +30,7 @@ Before you begin, you may want to prepare your system by doing the following:
 
 A typical workflow to start an installer is:
 
-kvm-creator create $GUESTNAME [$DISKSIZE [$RAM [$TAP [$MAC] ] ] ]
+kvm-creator create $GUESTNAME $VG [$DISKSIZE [$RAM [$TAP [$MAC] ] ] ]
 # set up boot media for the host ("put the installer CD in the drive"):
 ln -s /usr/local/share/ISOs/d-i.iso /home/$GUESTNAME/vms/$GUESTNAME/cd.iso
 # set up access to the account:

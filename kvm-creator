@@ -9,10 +9,11 @@ CMD="$1"
 shift
 
 NAME="$1"
-SIZE="${2:-3G}"
-RAM="${3:-512}"
-TAP="${4:-$(( $( cat /etc/sv/kvm/*/env/TAP | sed 's/^tap//' | sort -n  | tail -n 1 ) + 1 ))}"
-MAC="${5:-$(cat /etc/sv/kvm/*/env/MAC | head -n1 | cut -f 1-5 -d: ):$(( $( cat /etc/sv/kvm/*/env/MAC | cut -f 6 -d:  | sort -n  | tail -n 1 ) + 1 ))}"
+VG="$2"
+SIZE="${3:-3G}"
+RAM="${4:-512}"
+TAP="${5:-$(( $( cat /etc/sv/kvm/*/env/TAP | sed 's/^tap//' | sort -n  | tail -n 1 ) + 1 ))}"
+MAC="${6:-$(cat /etc/sv/kvm/*/env/MAC | head -n1 | cut -f 1-5 -d: ):$(( $( cat /etc/sv/kvm/*/env/MAC | cut -f 6 -d:  | sort -n  | tail -n 1 ) + 1 ))}"
 
 VG=vg_malty0
 
