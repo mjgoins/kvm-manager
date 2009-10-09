@@ -23,6 +23,7 @@ Recommendations:
 Before you begin, you may want to prepare your system by doing the following:
 
 * Copy di-maker, kvm-manager, and kvm-creator into /usr/local/sbin
+* Copy screenrc.kvm-manager to /etc/
 * Make the directory /usr/local/share/ISOs
 * Create a serial console enabled debian installer.
 	* cd /usr/local/share/ISOs
@@ -33,8 +34,8 @@ A typical workflow to start an installer is:
 kvm-creator create $GUESTNAME $VG [$DISKSIZE [$RAM [$TAP [$MAC] ] ] ]
 # set up boot media for the host ("put the installer CD in the drive"):
 ln -s /usr/local/share/ISOs/d-i.iso /home/$GUESTNAME/vms/$GUESTNAME/cd.iso
-# set up access to the account:
-mkdir -p /home/$GUESTNAME/.ssh
+# by default, the account has the authorized_keys file from the root
+# user on the host. optionally, add additionall keys
 cat ~/.ssh/authorized_keys >> /home/$GUESTNAME/.ssh/authorized_keys
 # start up the host
 update-service --add /etc/sv/kvm/$GUESTNAME
