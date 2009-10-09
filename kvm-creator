@@ -1,5 +1,5 @@
 #!/bin/bash
-set -x
+#set -x
 
 # Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
 # Date: 2009-10-08
@@ -12,8 +12,21 @@ NAME="$1"
 VG="$2"
 SIZE="${3:-3G}"
 RAM="${4:-512}"
-TAP="${5:-$(( $( cat /etc/sv/kvm/*/env/TAP | sed 's/^tap//' | sort -n  | tail -n 1 ) + 1 ))}"
-MAC="${6:-$(cat /etc/sv/kvm/*/env/MAC | head -n1 | cut -f 1-5 -d: ):$(( $( cat /etc/sv/kvm/*/env/MAC | cut -f 6 -d:  | sort -n  | tail -n 1 ) + 1 ))}"
+
+if [ ls /etc/sv/kvm/* &> /dev/null ]; then
+	TAP="${5:-$(( $( cat /etc/sv/kvm/*/env/TAP | sed 's/^tap//' | sort -n  | tail -n 1 ) + 1 ))}"
+	MAC="${6:-$(cat /etc/sv/kvm/*/env/MAC | head -n1 | cut -f 1-5 -d: ):$(( $( cat /etc/sv/kvm/*/env/MAC | cut -f 6 -d:  | sort -n  | tail -n 1 ) + 1 ))}"
+else
+	TAP=1
+	MAC=:1
+fi
+
+die() {
+	echo "$1"
+	exit_code=1
+	[ -n "$2" ] && exit_code="$2"
+	exit $exit_code
+}
 
 destroy() {
 
@@ -30,6 +43,8 @@ create() {
 
 # FIXME: check that this stuff doesn't exist yet:
 
+		[ -z "$NAME" ] && die "Please pass the name of the virtual server to create"
+		[ -z "$VG" ] && die "Please pass the name of the volume group to use"
     adduser "$NAME" --disabled-password --gecos "$NAME KVM user,,,"
     mkdir "/home/$NAME/"{.ssh,vms,"vms/$NAME"}
     touch "/home/$NAME/vms/$NAME/netboot"
