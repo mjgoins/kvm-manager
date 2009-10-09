@@ -13,7 +13,7 @@ VG="$2"
 SIZE="${3:-3G}"
 RAM="${4:-512}"
 
-[ ! -d /etc/sv/kvm ] && mkdir /etc/sv/kvm
+[ "$CMD" == "create" ] && [ ! -d /etc/sv/kvm ] && mkdir /etc/sv/kvm
 
 ls /etc/sv/kvm/* &> /dev/null
 if [ "$?" -eq 0 ]; then
