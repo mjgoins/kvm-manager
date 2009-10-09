@@ -24,6 +24,12 @@ else
   MAC=00:00:00:00:00:00
 fi
 
+usage() {
+
+	die "USAGE: kvm-creator create|destroy|demo guestname [volumegroup [disksize [ram [tap [mac] ] ] ] ]"
+
+}
+
 die() {
 
   echo "$1"
@@ -47,7 +53,7 @@ validate() {
 
   # Make sure none of the pieces already exist.
   [ -z "$NAME" ] && die "Please pass the name of the virtual server to create"
-  [ -z "$VG" ] && die "Please pass the name of the volume group to use"
+  [ -z "$VG" ] && [ "$CMD" == "create" ] && die "Please pass the name of the volume group to use"
   getent passwd "$NAME" > /dev/null
   [ "$?" -eq "0" ] && die "The username '$NAME' already exists."
   getent group "$NAME" > /dev/null
@@ -107,5 +113,7 @@ demo() {
     done
 
 }
+
+[ "$CMD" != "create" ] && [ "$CMD" != "destroy" ] && [ "$CMD" != "demo" ] && usage
 
 "$CMD"
