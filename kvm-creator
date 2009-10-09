@@ -81,7 +81,7 @@ EOF
 
 demo() {
 
-    for foo in NAME TAP RAM MAC SIZE ; do
+    for foo in NAME VG TAP RAM MAC SIZE ; do
 	echo "$foo : ${!foo}"
     done
 }
