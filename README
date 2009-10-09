@@ -20,6 +20,14 @@ Recommendations:
 
  openssh-server : i've been using ssh to access the vm's serial console
 
+Before you begin, you may want to prepare your system by doing the following:
+
+* Copy di-maker, kvm-manager, and kvm-creator into /usr/local/sbin
+* Make the directory /usr/local/share/ISOs
+* Create a serial console enabled debian installer.
+	* cd /usr/local/share/ISOs
+	* di-maker > d-i.iso
+
 A typical workflow to start an installer is:
 
 kvm-creator create $GUESTNAME [$DISKSIZE [$RAM [$TAP [$MAC] ] ] ]
