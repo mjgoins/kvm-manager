@@ -1,0 +1,84 @@
+# default screenrc file for kvm-manager sessions (copied from cereal's screenrc)
+
+# use C-\ as the escape character
+escape \034\034
+
+logfile ./servicelog
+logfile flush 1
+
+# unset important key bindings
+## prevent external command execution
+bind :
+## prevent opening new windows
+bind c
+bind ^c
+## prevent ability to turn off logging
+bind H
+## prevent terminal reset
+bind Z
+## unset kill commands, sincepreference is to "detach")
+## (should unset "quit" too, or is it useful to have a backup "kill"?)
+bind ^k
+bind k
+bind K
+bind \
+bind \\
+bind ^\
+## no lockscreen:
+bind ^x
+bind x
+## no monitor, prev, next:
+bind M
+bind ^@
+bind n
+bind ^N
+bind ' ' 
+bind ^H
+bind ^P
+bind p
+bind ^?
+# no number:
+bind N
+# no clear:
+bind C
+# no displays or dumptermcap:
+bind *
+bind .
+# no window switching:
+bind -
+bind 0
+bind 1
+bind 2
+bind 3
+bind 4
+bind 5
+bind 6
+bind 7
+bind 8
+bind 9
+## no window splitting:
+bind S
+# no title change
+bind A
+# no remove
+bind X
+# no windows:
+bind ^w
+bind w
+# no suspend:
+bind ^z
+# no focus:
+bind ^i
+# no windowlist:
+bind \"
+
+# set default shell to be /bin/false
+# this is a little redundant with unsetting the create new window keys
+shell /bin/false
+
+# set a nice, informative caption
+caption always "%{= bw}%f %{+b w}KVM console: %{+b y}%t%{-b w} %= %Y-%m-%d %c %= %{-b}\"C-\ d\" to detach"
+
+startup_message off
+defscrollback 1024
+
