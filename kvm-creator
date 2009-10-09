@@ -21,7 +21,7 @@ if [ "$?" -eq 0 ]; then
 	MAC="${6:-$(cat /etc/sv/kvm/*/env/MAC | head -n1 | cut -f 1-5 -d: ):$(( $( cat /etc/sv/kvm/*/env/MAC | cut -f 6 -d:  | sort -n  | tail -n 1 ) + 1 ))}"
 else
 	TAP=tap0
-	MAC=:1
+	MAC=00:00:00:00:00:00
 fi
 
 die() {
@@ -41,13 +41,22 @@ destroy() {
 
 }
 
+validate() {
+	# Make sure none of the pieces already exist.
+	[ -z "$NAME" ] && die "Please pass the name of the virtual server to create"
+	[ -z "$VG" ] && die "Please pass the name of the volume group to use"
+	getent passwd "$NAME" > /dev/null
+	[ "$?" -eq "0" ] && die "The username '$NAME' already exists."
+	getent group "$NAME" > /dev/null
+	[ "$?" -eq 0 ] && die "The group '$NAME' already exists."
+	[ -d /home/"$NAME" ] && die "The directory '/home/$NAME' already exists."
+	[ -d /etc/sv/kvm/"$NAME" ] && die "The directory '/etc/sv/kvm/$NAME' already exists."
+	[ -d /dev/mapper/${VG}-${NAME} ] && die "The logical volume $NAME already exists."
+}
+
 create() {
     set -e
-
-# FIXME: check that this stuff doesn't exist yet:
-
-		[ -z "$NAME" ] && die "Please pass the name of the virtual server to create"
-		[ -z "$VG" ] && die "Please pass the name of the volume group to use"
+		validate
     adduser "$NAME" --disabled-password --gecos "$NAME KVM user,,,"
 		addgroup "$NAME" kvm
 		for dir in .ssh vms "vms/$NAME"; do
@@ -86,7 +95,7 @@ EOF
 }
 
 demo() {
-
+		validate
     for foo in NAME VG TAP RAM MAC SIZE ; do
 	echo "$foo : ${!foo}"
     done
