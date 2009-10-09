@@ -46,7 +46,9 @@ create() {
 		[ -z "$NAME" ] && die "Please pass the name of the virtual server to create"
 		[ -z "$VG" ] && die "Please pass the name of the volume group to use"
     adduser "$NAME" --disabled-password --gecos "$NAME KVM user,,,"
-    mkdir "/home/$NAME/"{.ssh,vms,"vms/$NAME"}
+		for dir in .ssh vms "vms/$NAME"; do
+			[ ! -d "/home/$NAME/$dir" ] && mkdir "/home/$NAME/$dir"
+		done
     touch "/home/$NAME/vms/$NAME/netboot"
     chown "$NAME:$NAME" "/home/$NAME/"{.ssh,vms,"vms/$NAME","vms/$NAME/netboot"}
     cp /root/.ssh/authorized_keys "/home/$NAME/.ssh/"
