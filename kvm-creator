@@ -12,6 +12,7 @@ NAME="$1"
 VG="$2"
 SIZE="${3:-3G}"
 RAM="${4:-512}"
+DISK="/dev/mapper/${VG}-${NAME}"
 
 [ "$CMD" == "create" ] && [ ! -d /etc/sv/kvm ] && mkdir /etc/sv/kvm
 
@@ -60,7 +61,7 @@ validate() {
   [ "$?" -eq 0 ] && die "The group '$NAME' already exists."
   [ -d /home/"$NAME" ] && die "The directory '/home/$NAME' already exists."
   [ -d /etc/sv/kvm/"$NAME" ] && die "The directory '/etc/sv/kvm/$NAME' already exists."
-  [ -d /dev/mapper/${VG}-${NAME} ] && die "The logical volume $NAME already exists."
+  [ -e $DISK ] && die "The logical volume $NAME already exists."
 
 }
 
@@ -101,13 +102,14 @@ EOF
     echo "$TAP" > "/etc/sv/kvm/$NAME/env/TAP"
     echo "$RAM" > "/etc/sv/kvm/$NAME/env/RAM"
     echo "$MAC" > "/etc/sv/kvm/$NAME/env/MAC"
+		echo "$DISK" > "/etc/sv/kvm/$NAME/env/KVMOPTS"
 
 }
 
 demo() {
 
     validate
-    for foo in NAME VG TAP RAM MAC SIZE ; do
+    for foo in NAME VG TAP RAM MAC SIZE DISK ; do
       echo "$foo : ${!foo}"
     done
 
