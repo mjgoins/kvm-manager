@@ -73,7 +73,7 @@ create() {
     for dir in .ssh vms "vms/$NAME"; do
       [ ! -d "/home/$NAME/$dir" ] && mkdir "/home/$NAME/$dir"
     done
-    chown "$NAME:$NAME" "/home/$NAME/"{.ssh,vms,"vms/$NAME","vms/$NAME/netboot"}
+    chown "$NAME:$NAME" "/home/$NAME/"{.ssh,vms,"vms/$NAME"}
     cp /root/.ssh/authorized_keys "/home/$NAME/.ssh/"
     lvcreate --name "$NAME" --size "$SIZE" $VG
     mkdir "/etc/sv/kvm/$NAME"{,/log,/env}
