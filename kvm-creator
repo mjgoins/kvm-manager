@@ -67,8 +67,8 @@ validate() {
 
 create() {
 
-    set -e
     validate
+    set -e
     adduser "$NAME" --disabled-password --gecos "$NAME KVM user,,,"
     addgroup "$NAME" kvm
     for dir in .ssh vms "vms/$NAME"; do
