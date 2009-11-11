@@ -9,7 +9,7 @@ CMD="$1"
 shift
 
 NAME="$1"
-VG="$2"
+VG="${2:-vg_$(hostname)0}"
 SIZE="${3:-3G}"
 RAM="${4:-512}"
 DISK="/dev/mapper/${VG}-${NAME}"
