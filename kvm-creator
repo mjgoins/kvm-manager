@@ -19,10 +19,11 @@ DISK="/dev/mapper/${VG}-${NAME}"
 ls /etc/sv/kvm/* &> /dev/null
 if [ "$?" -eq 0 ]; then
   TAP="${5:-tap$(( $( cat /etc/sv/kvm/*/env/TAP | sed 's/^tap//' | sort -n  | tail -n 1 ) + 1 ))}"
-  MAC="${6:-$(cat /etc/sv/kvm/*/env/MAC | head -n1 | cut -f 1-5 -d: ):$(( $( cat /etc/sv/kvm/*/env/MAC | cut -f 6 -d:  | sort -n  | tail -n 1 ) + 1 ))}"
+  MAC="${6:-$(printf "%s:%02x" "$(cat /etc/sv/kvm/*/env/MAC | sort | head -n1 | cut -f 1-5 -d: )" "$(( 0x$( cat /etc/sv/kvm/*/env/MAC | cut -f 6 -d:  | sort -n  | tail -n 1 ) + 1 ))" )}"
 else
   TAP=tap0
-  MAC=00:00:00:00:00:00
+  # use a locally-administered MAC address:
+  MAC=02:00:00:00:00:01
 fi
 
 usage() {
