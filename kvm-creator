@@ -14,7 +14,7 @@ SIZE="${3:-3G}"
 RAM="${4:-512}"
 DISK="/dev/mapper/${VG}-${NAME}"
 
-[ "$CMD" == "create" ] && [ ! -d /etc/sv/kvm ] && mkdir /etc/sv/kvm
+[ "$CMD" == "create" ] && mkdir -p /etc/sv/kvm
 
 ls /etc/sv/kvm/* &> /dev/null
 if [ "$?" -eq 0 ]; then
@@ -53,26 +53,22 @@ destroy() {
 validate() {
 
   # Make sure none of the pieces already exist.
-  [ -z "$NAME" ] && die "Please pass the name of the virtual server to create"
-  [ -z "$VG" ] && [ "$CMD" == "create" ] && die "Please pass the name of the volume group to use"
-  getent passwd "$NAME" > /dev/null
-  [ "$?" -eq "0" ] && die "The username '$NAME' already exists."
-  getent group "$NAME" > /dev/null
-  [ "$?" -eq 0 ] && die "The group '$NAME' already exists."
-  [ -d /home/"$NAME" ] && die "The directory '/home/$NAME' already exists."
-  [ -d /etc/sv/kvm/"$NAME" ] && die "The directory '/etc/sv/kvm/$NAME' already exists."
-  [ -e $DISK ] && die "The logical volume $NAME already exists."
+  [ -z "$NAME" ] && die "Please pass the name of the virtual server to create" || :
+  [ -z "$VG" ] && [ "$CMD" == "create" ] && die "Please pass the name of the volume group to use" || :
+  getent passwd "$NAME" > /dev/null && die "The username '$NAME' already exists." || :
+  getent group "$NAME" > /dev/null && die "The group '$NAME' already exists." || :
+  [ -d /home/"$NAME" ] && die "The directory '/home/$NAME' already exists." || :
+  [ -d /etc/sv/kvm/"$NAME" ] && die "The directory '/etc/sv/kvm/$NAME' already exists." || :
+  [ -e $DISK ] && die "The logical volume $NAME already exists." || :
 
 }
 
 create() {
 
-    validate
     set -e
+    validate
     adduser "$NAME" --disabled-password --gecos "$NAME KVM user,,,"
-    for dir in .ssh vms "vms/$NAME"; do
-      [ ! -d "/home/$NAME/$dir" ] && mkdir "/home/$NAME/$dir"
-    done
+    mkdir -p "/home/$NAME/"{.ssh,vms,"vms/$NAME"}
     chown "$NAME:$NAME" "/home/$NAME/"{.ssh,vms,"vms/$NAME"}
     cp /root/.ssh/authorized_keys "/home/$NAME/.ssh/"
     lvcreate --name "$NAME" --size "$SIZE" $VG
