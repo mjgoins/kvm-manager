@@ -6,25 +6,47 @@
 
 set -e
 
-# depends on grub2 -- should probably be refactored to use
-# grub-mkrescue
+# depends on grub2
+
+# specify the first argument as the new installer image:
+
+output="$1"
+
+if [ -z "$output" ] ; then
+    printf "you must specify a file name for the image to be built" >&2
+    exit 1
+fi
+
+if [ -e "$output" ] ; then
+    printf "file '%s' already exists" "$output" >&2
+    exit 1
+fi
+
 
 WORKDIR=$(mktemp -d)
+
+cleanup() {
+    rm -rf "$WORKDIR"
+}
+
+trap cleanup EXIT
 
 ( cd "$WORKDIR" && wget http://ftp.nl.debian.org/debian/dists/lenny/main/installer-amd64/current/images/netboot/debian-installer/amd64/{linux,initrd.gz} )
 
 mkdir -p "$WORKDIR/boot/grub"
 
-cp /usr/lib/grub/x86_64-pc/stage2_eltorito "$WORKDIR/boot/grub/"
-cat > "$WORKDIR/boot/grub/menu.lst" <<EOF
+cat > "$WORKDIR/boot/grub/grub.cfg" <<EOF
 serial --unit=0 --speed=115200 --word=8 --parity=no --stop=1
-terminal serial
+terminal_output serial
+terminal_input serial
 
-title lenny d-i (created $(date -R))
-kernel /linux -- console=ttyS0,115200n8
-initrd /initrd.gz
+menuentry "lenny d-i (created $(date -R))" {
+  linux /linux verbose -- console=ttyS0,115200n8
+  initrd /initrd.gz
+}
 EOF
 
-genisoimage -R -input-charset utf-8 -b boot/grub/stage2_eltorito -no-emul-boot --boot-load-size 4 -boot-info-table "$WORKDIR"
+## no longer using genisoimage with grub2:
+# genisoimage -R -input-charset utf-8 -b boot/grub/stage2_eltorito -no-emul-boot --boot-load-size 4 -boot-info-table "$WORKDIR"
 
-rm -rf "$WORKDIR"
+grub-mkrescue --overlay="$WORKDIR" "$output"
