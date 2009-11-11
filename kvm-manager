@@ -13,6 +13,7 @@ set -x
 # TAP=tap0
 # RAM=512
 # MAC=52:54:00:12:34:56
+# KVMOPTS=/path/to/disk
 
 if [ -z "$VMNAME" ] ; then
     exit 1
@@ -75,7 +76,7 @@ case "$1" in
 	"$1"
 	;;
     *)
-	echo "Usage: $0 [up|down]"
+	echo "Usage: $0 [up|down]" >&2
 	exit 1
 	;;
 esac
