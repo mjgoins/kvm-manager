@@ -12,6 +12,9 @@ set -e
 
 output="$1"
 
+SUITE=${SUITE:-stable}
+ARCH=${ARCH:-amd64}
+
 if [ -z "$output" ] ; then
     printf "you must specify a file name for the image to be built" >&2
     exit 1
@@ -31,7 +34,7 @@ cleanup() {
 
 trap cleanup EXIT
 
-( cd "$WORKDIR" && wget http://ftp.nl.debian.org/debian/dists/lenny/main/installer-amd64/current/images/netboot/debian-installer/amd64/{linux,initrd.gz} )
+( cd "$WORKDIR" && wget http://ftp.nl.debian.org/debian/dists/"$SUITE"/main/installer-"$ARCH"/current/images/netboot/debian-installer/"$ARCH"/{linux,initrd.gz} )
 
 mkdir -p "$WORKDIR/boot/grub"
 
@@ -40,7 +43,7 @@ serial --unit=0 --speed=115200 --word=8 --parity=no --stop=1
 terminal_output serial
 terminal_input serial
 
-menuentry "lenny d-i (created $(date -R))" {
+menuentry "$SUITE d-i (created $(date -R))" {
   linux /linux verbose -- console=ttyS0,115200n8
   initrd /initrd.gz
 }
