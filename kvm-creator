@@ -103,10 +103,10 @@ create() {
         # is this really the right thing to do?
         cp /root/.ssh/authorized_keys "$USERHOMEDIR/.ssh/"
     fi
-    USERGID="$(getent passwd "$OWNER")"
+    USERGID="$(getent passwd "$NAME")"
     USERGID="$(cut -f4 -d: <<<$USERGID)"
     USERGROUP="$(getent group "$USERGID")"
-    USERGROUP=${USERGROUP%%:*}
+    USERGROUP="${USERGROUP%%:*}"
  
     udevrule "$VG" "$NAME" "$USERGROUP" > $(udevrulename "$NAME")
 
