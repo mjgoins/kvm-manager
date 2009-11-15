@@ -13,7 +13,10 @@ set -x
 # TAP=tap0
 # RAM=512
 # MAC=52:54:00:12:34:56
-# KVMOPTS=/path/to/disk
+# HDA=/path/to/disk0 # optional
+# HDB=/path/to/disk1 # optional
+# HDC=/path/to/disk2 # optional
+# HDD=/path/to/disk3 # optional
 
 if [ -z "$VMNAME" ] ; then
     exit 1
@@ -32,9 +35,6 @@ up() {
     ip link set "$TAP" up
     brctl addif br0 "$TAP"
     
-# make sure the block device is readable by the owner:
-    chgrp "$OWNERGROUP" "/dev/mapper/${VGNAME}-$VMNAME"
-    
     chpst -u "$OWNER:$OWNERGROUP" mkdir -p "$OWNERHOME/vms/$VMNAME"
 
     CDISO="$OWNERHOME/vms/$VMNAME/cd.iso"
@@ -47,13 +47,19 @@ up() {
 	KVMARGS="-cdrom $CDISO -boot d"
     fi
 
+    # set up the disks, if needed:
+    [ -z "$HDA" ] || KVMARGS="$KVMARGS -hda $HDA"
+    [ -z "$HDB" ] || KVMARGS="$KVMARGS -hdb $HDB"
+    [ -z "$HDC" ] || KVMARGS="$KVMARGS -hdc $HDC"
+    [ -z "$HDD" ] || KVMARGS="$KVMARGS -hdd $HDD"
+
     LOGNAME="$OWNERHOME/vms/$VMNAME/console"
     ln -sfT "$LOGNAME" ./servicelog
     if [ -e "$LOGNAME" ] ; then
 	chpst -u "$OWNER" mv "$LOGNAME" "$LOGNAME".$(date +%F_%T%z|tr : .)
     fi
 
-    exec chpst -u "$OWNER:$OWNERGROUP:kvm" /usr/bin/screen -D -m -L -c /etc/screenrc.kvm-manager -S "$VMNAME" -t "$VMNAME" -s /bin/false /usr/bin/kvm $KVMARGS -nographic -name "$VMNAME" -m "$RAM" -net nic,"macaddr=$MAC" -net "tap,hostname=$VMNAME,ifname=$TAP,script=no,downscript=no" -no-reboot -serial stdio "$KVMOPTS" 
+    exec chpst -u "$OWNER:$OWNERGROUP:kvm" /usr/bin/screen -D -m -L -c /etc/screenrc.kvm-manager -S "$VMNAME" -t "$VMNAME" -s /bin/false /usr/bin/kvm $KVMARGS -nographic -name "$VMNAME" -m "$RAM" -net nic,"macaddr=$MAC" -net "tap,hostname=$VMNAME,ifname=$TAP,script=no,downscript=no" -no-reboot -serial stdio
 }
 
 

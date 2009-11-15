@@ -9,10 +9,17 @@ CMD="$1"
 shift
 
 NAME="$1"
+# FIXME: make this default to the only vg (if only one vg exists), or to vg_$(hostname0) or $(hostname), if those VGs exist
 VG="${2:-vg_$(hostname)0}"
 SIZE="${3:-3G}"
 RAM="${4:-512}"
 DISK="/dev/mapper/${VG}-${NAME}"
+
+# for managing udev (we want to make sure that logical volumes get
+# created with ownership by the controlling user:
+UDEV_RULES_FILE="/etc/udev/rules.d/92-kvm_creator-%s.rules"
+# Why choose 92?  /usr/share/doc/udev/README.Debian.gz says after 91
+# default permissions and ownership are set.
 
 [ "$CMD" == "create" ] && mkdir -p /etc/sv/kvm
 
@@ -47,20 +54,41 @@ destroy() {
     rm -rf "/etc/sv/kvm/$NAME"
     deluser --remove-home "$NAME"
     lvremove "$VG/$NAME"
+    rm -f "$(udevrulename "$NAME")"
 
 }
 
 validate() {
 
-  # Make sure none of the pieces already exist.
-  [ -z "$NAME" ] && die "Please pass the name of the virtual server to create" || :
-  [ -z "$VG" ] && [ "$CMD" == "create" ] && die "Please pass the name of the volume group to use" || :
-  getent passwd "$NAME" > /dev/null && die "The username '$NAME' already exists." || :
-  getent group "$NAME" > /dev/null && die "The group '$NAME' already exists." || :
-  [ -d /home/"$NAME" ] && die "The directory '/home/$NAME' already exists." || :
-  [ -d /etc/sv/kvm/"$NAME" ] && die "The directory '/etc/sv/kvm/$NAME' already exists." || :
-  [ -e $DISK ] && die "The logical volume $NAME already exists." || :
+  errors=""
 
+  # Make sure none of the pieces already exist.
+  [ -z "$NAME" ] && errors=$(printf "%s\n%s" "$errors" "Please pass the name of the virtual server to create") || :
+  [ -z "$VG" ] && errors=$(printf "%s\n%s" "$errors"  "Please pass the name of the volume group to use") || :
+  vgs --noheadings --unbuffered -o name | tr -d ' ' | grep -q -F -x "$VG" || errors=$(printf "%s\n%s" "$errors"  "Please pass the name of the volume group to use") || :
+  getent passwd "$NAME" > /dev/null && errors=$(printf "%s\n%s" "$errors" "The username '$NAME' already exists.") || :
+  getent group "$NAME" > /dev/null && errors=$(printf "%s\n%s" "The group '$NAME' already exists.") || :
+  [ -d /home/"$NAME" ] && errors=$(printf "%s\n%s" "The directory '/home/$NAME' already exists.") || :
+  [ -d /etc/sv/kvm/"$NAME" ] && errors=$(printf "%s\n%s" "The directory '/etc/sv/kvm/$NAME' already exists.") || :
+  [ -e $DISK ] && errors=$(printf "%s\n%s" "The logical volume $NAME already exists.") || :
+  [ -e "$(udevrulename "$NAME")" ] && errors=$(printf "%s\n%s" "The udev rules file '$(udevrulename "$NAME")' already exists.") || :
+
+  [ -z "$errors" ] || die "$errors"
+
+}
+
+udevrule() {
+    VOLUME_GROUP="$1"
+    LOGICAL_VOLUME="$2"
+    GROUP="$3"
+
+    # this appears to be the way that a udev rule to control the LVM device gets created:
+
+    printf 'ACTION=="change", SUBSYSTEM=="block", ATTR{dm/name}=="%s-%s", GROUP="%s"\n' "$VOLUME_GROUP" "$LOGICAL_VOLUME" "$GROUP" 
+}
+
+udevrulename() {
+    printf "$UDEV_RULES_FILE" "$1"
 }
 
 create() {
@@ -75,6 +103,13 @@ create() {
         # is this really the right thing to do?
         cp /root/.ssh/authorized_keys "$USERHOMEDIR/.ssh/"
     fi
+    USERGID="$(getent passwd "$OWNER")"
+    USERGID="$(cut -f4 -d: <<<$USERGID)"
+    USERGROUP="$(getent group "$USERGID")"
+    USERGROUP=${USERGROUP%%:*}
+ 
+    udevrule "$VG" "$NAME" "$USERGROUP" > $(udevrulename "$NAME")
+
     lvcreate --name "$NAME" --size "$SIZE" $VG
     mkdir "/etc/sv/kvm/$NAME"{,/log,/env}
     cat > "/etc/sv/kvm/$NAME/log/run" <<EOF
@@ -101,7 +136,7 @@ EOF
     echo "$TAP" > "/etc/sv/kvm/$NAME/env/TAP"
     echo "$RAM" > "/etc/sv/kvm/$NAME/env/RAM"
     echo "$MAC" > "/etc/sv/kvm/$NAME/env/MAC"
-		echo "$DISK" > "/etc/sv/kvm/$NAME/env/KVMOPTS"
+    echo "$DISK" > "/etc/sv/kvm/$NAME/env/HDA"
 
 }
 
