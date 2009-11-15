@@ -1,7 +1,9 @@
 KVM-Manager
 
-Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
-Date: 2009-10-08 11:22:14-0400
+Authors: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+         Jamie McClelland <jm@mayfirst.org>
+Copyright © 2009
+License: GPL-3+
 
 This is a small set of scripts to make it relatively easy to manage a
 stable of kvm instances in a fairly secure and isolated fashion.
@@ -18,6 +20,8 @@ Dependencies:
  kvm : for the virtual machine emulator
  screen : for the detached, logged serial console
  bridge-utils : for configuring a bridge device
+ lvm2 : for creating the relevant block devices
+ udev : for configuring the block devices with proper permissions
 
 Recommendations:
 
@@ -27,15 +31,15 @@ INSTALLATION
 
  * Install dependencies:
 
-   aptitude install runit uml-utilties kvm screen bridge-utils
+   aptitude install runit uml-utilties kvm screen bridge-utils lvm2 udev
 
- * Copy programs into /usr/local/sbin:
+ * Link programs into /usr/local/sbin:
  
-   cp {di-maker,kvm-manager,kvm-creator} /usr/local/sbin/
+   ln -s {di-maker,kvm-manager,kvm-creator} /usr/local/sbin/
 
- * Copy screen configuration file into /etc
+ * Link screen configuration file into /etc
 
-   cp screenrc.kvm-manager /etc/
+   ln -s screenrc.kvm-manager /etc/
 
  * Configure your host network to use a bridge. If your network adaptor 
    is eth0, you can use the following in /etc/network/interfaces
@@ -45,11 +49,19 @@ INSTALLATION
     [Put your normal IP config for eth0 here...]
     bridge_ports eth0
 
+ * Alternately, you can create an internal-only bridge, and tell your
+   host to pass traffic to it:
+
+  auto br0
+  iface br0 inet static
+    [ internal IP address information ]
+  post-up echo 1 > /proc/sys/net/ipv4/conf/br0/forwarding
+
 INSTALLING DEBIAN ONTO YOUR VIRTUAL SERVER
 
 To create a KVM instance, run:
 
-  kvm-creator create $GUESTNAME $VG [$DISKSIZE [$RAM [$TAP [$MAC] ] ] ]
+  kvm-creator create $GUESTNAME [ $VG [$DISKSIZE [$RAM [$TAP [$MAC] ] ] ] ]
 
 You can replace "create" with "demo" to see the default values for non-
 specified options.
