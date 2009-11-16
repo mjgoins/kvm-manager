@@ -83,8 +83,15 @@ udevrule() {
     GROUP="$3"
 
     # this appears to be the way that a udev rule to control the LVM device gets created:
-
     printf 'ACTION=="change", SUBSYSTEM=="block", ATTR{dm/name}=="%s-%s", GROUP="%s"\n' "$VOLUME_GROUP" "$LOGICAL_VOLUME" "$GROUP" 
+
+    # unfortunately, kernel 2.6.26-2-amd64 (from debian) does not
+    # appear to export /sys/block/dm-%d/dm/name ; nether does
+    # 2.6.28-16-generic (ubuntu);  2.6.30-2-686 *does* export that
+    # label, so the above line works on squeeze at the moment.
+
+    # not sure what to do about this for lenny systems.  See:
+    # http://bugs.debian.org/450793
 }
 
 udevrulename() {
