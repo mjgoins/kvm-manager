@@ -14,6 +14,7 @@ output="$1"
 
 SUITE=${SUITE:-stable}
 ARCH=${ARCH:-amd64}
+DISTRO=${DISTRO:-debian}
 
 if [ -z "$output" ] ; then
     printf "you must specify a file name for the image to be built" >&2
@@ -34,7 +35,16 @@ cleanup() {
 
 trap cleanup EXIT
 
-( cd "$WORKDIR" && wget http://ftp.nl.debian.org/debian/dists/"$SUITE"/main/installer-"$ARCH"/current/images/netboot/debian-installer/"$ARCH"/{linux,initrd.gz} )
+case "$DISTRO" in
+    debian)
+        BASEPATH="http://ftp.nl.debian.org/debian/dists/$SUITE/main/installer-$ARCH/current/images/netboot/debian-installer/$ARCH"
+        ;;
+    ubuntu)
+        BASEPATH="http://archive.ubuntu.com/ubuntu/dists/$SUITE/main/installer-$ARCH/current/images/netboot/ubuntu-installer/$ARCH"
+        ;;
+esac
+
+( cd "$WORKDIR" && wget "$BASEPATH"/{linux,initrd.gz} )
 
 mkdir -p "$WORKDIR/boot/grub"
 
