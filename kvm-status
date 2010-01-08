@@ -14,15 +14,14 @@ function convert_ram {
 	fi
 }
 
-temp=$(mktemp)
-echo "SERVER RAM" > "$temp"
-total_ram=0
-for foo in $(ls $dir); do
-	ram=$(cat $dir/$foo/env/RAM)
-	convert_ram "$ram"
-	echo "$foo $display_ram" >> "$temp"
-	total_ram=$(( $total_ram + $display_ram ))
-done	
-echo "TOTAL $total_ram" >> "$temp"
-column -t "$temp"
-rm "$temp"
+{
+  echo "SERVER RAM"
+  total_ram=0
+  for foo in $(ls $dir); do
+      ram=$(cat $dir/$foo/env/RAM)
+      convert_ram "$ram"
+      echo "$foo $display_ram"
+      total_ram=$(( $total_ram + $display_ram ))
+  done	
+  echo "TOTAL $total_ram"
+} | column -t
