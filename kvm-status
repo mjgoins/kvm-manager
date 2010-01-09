@@ -1,0 +1,27 @@
+#!/bin/bash
+
+dir=/etc/sv/kvm
+
+function convert_ram {
+	display_ram=
+	ram=$(echo "$1" | tr [:upper:] [:lower:])
+	label=$(echo $ram| tr -d "[0-9]+")
+	value=${ram%$label}
+	if [ -z "$label" ] || [ "$label" = "mb" ]; then
+		display_ram=$value
+	else	
+		display_ram=$(( $value * 1024 ))
+	fi
+}
+
+{
+  echo "SERVER RAM"
+  total_ram=0
+  for foo in $(ls $dir); do
+      ram=$(cat $dir/$foo/env/RAM)
+      convert_ram "$ram"
+      echo "$foo $display_ram"
+      total_ram=$(( $total_ram + $display_ram ))
+  done	
+  echo "TOTAL $total_ram"
+} | column -t
