@@ -44,18 +44,46 @@ case "$DISTRO" in
         ;;
 esac
 
-( cd "$WORKDIR" && wget "$BASEPATH"/{linux,initrd.gz} )
+KERNEL=linux
+INITRAMFS=initrd.gz
+BOOTINSTRUCTIONS="
+  linux /$KERNEL verbose -- console=ttyS0,115200n8
+  initrd /$INITRAMFS
+"
+
+case "$ARCH" in
+    kfreebsd-*)
+        # FIXME: this discards the requested SUITE, and just pulls the
+        # latest d-i, because dkg is lazy
+        SUITE=sid
+        KERNEL=kfreebsd.gz
+        BASEPATH="http://d-i.debian.org/daily-images/$ARCH/daily/monolithic/"
+        BOOTINSTRUCTIONS='
+  # this set came from mini.iso
+  kfreebsd /kfreebsd.gz
+  kfreebsd_module /initrd.gz type=mfs_root
+  set kFreeBSD.vfs.root.mountfrom=ufs:/dev/md0
+  set kFreeBSD.hw.ata.ata_dma=0	# needed for qemu hard disk # TODO: delete
+  set kFreeBSD.hw.ata.atapi_dma=0	# needed for qemu cd # TODO: 1
+
+  # this set came from http://jdc.parodius.com/freebsd/pxeboot_serial_install_7.html
+  set kFreeBSD.comconsole_speed="115200"
+  set kFreeBSD.console="comconsole"
+'
+esac
+
+( cd "$WORKDIR" && wget "$BASEPATH"/{$KERNEL,$INITRAMFS} )
 
 mkdir -p "$WORKDIR/boot/grub"
+
 
 cat > "$WORKDIR/boot/grub/grub.cfg" <<EOF
 serial --unit=0 --speed=115200 --word=8 --parity=no --stop=1
 terminal_output serial
 terminal_input serial
 
-menuentry "$SUITE d-i (created $(date -R))" {
-  linux /linux verbose -- console=ttyS0,115200n8
-  initrd /initrd.gz
+menuentry "$SUITE d-i $ARCH (created $(date -R))" {
+$BOOTINSTRUCTIONS
 }
 EOF
 
