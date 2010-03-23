@@ -59,7 +59,7 @@ up() {
 	chpst -u "$OWNER" mv "$LOGNAME" "$LOGNAME".$(date +%F_%T%z|tr : .)
     fi
 
-    exec chpst -u "$OWNER:$OWNERGROUP:kvm" /usr/bin/screen -D -m -L -c /etc/screenrc.kvm-manager -S "$VMNAME" -t "$VMNAME" -s /bin/false /usr/bin/kvm $KVMARGS -nographic -name "$VMNAME" -m "$RAM" -net nic,"macaddr=$MAC" -net "tap,ifname=$TAP,script=no,downscript=no" -no-reboot -serial stdio
+    exec chpst -u "$OWNER:$OWNERGROUP:kvm" /usr/bin/screen -D -m -L -c /etc/screenrc.kvm-manager -S "$VMNAME" -t "$VMNAME" -s /bin/false /usr/bin/kvm $KVMARGS -nographic -name "$VMNAME" -m "$RAM" -net nic,"macaddr=$MAC" -net "tap,ifname=$TAP,script=no,downscript=no" -no-reboot
 }
 
 
