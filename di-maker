@@ -36,8 +36,6 @@ if [ "$preseed" ] ; then
         printf "could not read preseed file '%s'\n" "$preseed" >&2
         exit 1
     fi
-    checksum=$(md5sum - < "$preseed"  | cut -f1 -d\  )
-    preseed_args="preseed/file=/cdrom/preseed.cfg preseed/file/checksum=$checksum"
 fi
 
 WORKDIR=$(mktemp -d)
@@ -60,7 +58,7 @@ esac
 KERNEL=linux
 INITRAMFS=initrd.gz
 BOOTINSTRUCTIONS="
-  linux /$KERNEL verbose $preseed_args -- console=ttyS0,115200n8 
+  linux /$KERNEL verbose -- console=ttyS0,115200n8 
   initrd /$INITRAMFS
 "
 
@@ -88,7 +86,10 @@ esac
 ( cd "$WORKDIR" && wget "$BASEPATH"/{$KERNEL,$INITRAMFS} )
 
 if [ "$preseed" ]; then
-    cp "$preseed" "${WORKDIR}/preseed.cfg"
+    unpackdir=$(mktemp -d)
+    cp "$preseed" "$unpackdir/preseed.cfg"
+    ( cd "$unpackdir" && fakeroot bash -c "gzip -d < '$WORKDIR/$INITRAMFS' | cpio --extract ; find . | cpio --create -H newc | gzip" ) > "$WORKDIR/$INITRAMFS.new"
+    mv "$WORKDIR/$INITRAMFS.new" "$WORKDIR/$INITRAMFS"
 fi
 
 mkdir -p "$WORKDIR/boot/grub"
