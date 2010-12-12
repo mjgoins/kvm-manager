@@ -30,7 +30,7 @@ if [ "$?" -eq 0 ]; then
 else
   TAP=tap0
   # use a locally-administered MAC address:
-  MAC=02:00:00:00:00:01
+  MAC=${6:-02:00:00:00:00:01}
 fi
 
 usage() {
@@ -150,7 +150,7 @@ EOF
 demo() {
 
     validate
-    for foo in NAME VG TAP RAM MAC SIZE DISK ; do
+    for foo in NAME VG SIZE RAM TAP MAC DISK ; do
       echo "$foo : ${!foo}"
     done
 
