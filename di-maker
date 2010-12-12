@@ -12,6 +12,10 @@ set -e
 
 output="$1"
 
+# optionally specify the second argument as a preseed file:
+
+preseed="$2"
+
 SUITE=${SUITE:-stable}
 ARCH=${ARCH:-amd64}
 DISTRO=${DISTRO:-debian}
@@ -26,6 +30,15 @@ if [ -e "$output" ] ; then
     exit 1
 fi
 
+preseed_args=''
+if [ "$preseed" ] ; then
+    if ! [ -r "$preseed" ] ; then
+        printf "could not read preseed file '%s'\n" "$preseed" >&2
+        exit 1
+    fi
+    checksum=$(md5sum - < "$preseed"  | cut -f1 -d\  )
+    preseed_args="preseed/file=/cdrom/preseed.cfg preseed/file/checksum=$checksum"
+fi
 
 WORKDIR=$(mktemp -d)
 
@@ -47,7 +60,7 @@ esac
 KERNEL=linux
 INITRAMFS=initrd.gz
 BOOTINSTRUCTIONS="
-  linux /$KERNEL verbose -- console=ttyS0,115200n8
+  linux /$KERNEL verbose $preseed_args -- console=ttyS0,115200n8 
   initrd /$INITRAMFS
 "
 
@@ -73,6 +86,10 @@ case "$ARCH" in
 esac
 
 ( cd "$WORKDIR" && wget "$BASEPATH"/{$KERNEL,$INITRAMFS} )
+
+if [ "$preseed" ]; then
+    cp "$preseed" "${WORKDIR}/preseed.cfg"
+fi
 
 mkdir -p "$WORKDIR/boot/grub"
 
