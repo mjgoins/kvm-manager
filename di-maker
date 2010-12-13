@@ -4,6 +4,10 @@
 # Date: 2009-10-08
 # License: GPL v3+
 
+# usage:
+#  di-maker ISOFILE [FILE ...]
+#  make a new debian installer ISO, packing any additionally-supplied files into the initramfs directly
+
 set -e
 
 # depends on grub2
@@ -12,9 +16,9 @@ set -e
 
 output="$1"
 
-# optionally specify the second argument as a preseed file:
+# remaining arguments should be files to re-pack into the initrd
+shift
 
-preseed="$2"
 
 SUITE=${SUITE:-stable}
 ARCH=${ARCH:-amd64}
@@ -23,19 +27,6 @@ DISTRO=${DISTRO:-debian}
 if [ -z "$output" ] ; then
     printf "you must specify a file name for the image to be built" >&2
     exit 1
-fi
-
-if [ -e "$output" ] ; then
-    printf "file '%s' already exists" "$output" >&2
-    exit 1
-fi
-
-preseed_args=''
-if [ "$preseed" ] ; then
-    if ! [ -r "$preseed" ] ; then
-        printf "could not read preseed file '%s'\n" "$preseed" >&2
-        exit 1
-    fi
 fi
 
 WORKDIR=$(mktemp -d)
@@ -83,13 +74,19 @@ case "$ARCH" in
 '
 esac
 
-( cd "$WORKDIR" && wget "$BASEPATH"/{$KERNEL,$INITRAMFS} )
+if ! [ -e "$output" ] ; then
+    ( cd "$WORKDIR" && wget "$BASEPATH"/{$KERNEL,$INITRAMFS} )
+else
+    isoinfo -R -i "$output" -x "/$KERNEL" > "$WORKDIR/$KERNEL"
+    isoinfo -R -i "$output" -x "/$INITRAMFS" > "$WORKDIR/$INITRAMFS"
+fi
 
-if [ "$preseed" ]; then
+if [ "$#" -gt 0 ]; then
     unpackdir=$(mktemp -d)
-    cp "$preseed" "$unpackdir/preseed.cfg"
-    ( cd "$unpackdir" && fakeroot bash -c "gzip -d < '$WORKDIR/$INITRAMFS' | cpio --extract ; find . | cpio --create -H newc | gzip" ) > "$WORKDIR/$INITRAMFS.new"
-    mv "$WORKDIR/$INITRAMFS.new" "$WORKDIR/$INITRAMFS"
+    fstate=$(mktemp)
+    gzip -d < "$WORKDIR/$INITRAMFS" | (cd "$unpackdir" && fakeroot -i "$fstate" -s "$fstate" cpio --extract)
+    cp "$@" "$unpackdir/"
+    (cd "$unpackdir" && find . | fakeroot -i "$fstate" -s "$fstate" cpio --create -H newc | gzip ) > "$WORKDIR/$INITRAMFS"
 fi
 
 mkdir -p "$WORKDIR/boot/grub"
