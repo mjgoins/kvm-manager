@@ -22,6 +22,8 @@ Dependencies:
  bridge-utils : for configuring a bridge device
  lvm2 : for creating the relevant block devices
  udev : for configuring the block devices with proper permissions
+ fakeroot : for rebuilding the initramfs as a regular user in di-maker
+ xorriso : for grub2 to make an iso in di-maker
 
 Recommendations:
 
@@ -32,6 +34,10 @@ INSTALLATION
  * Install dependencies:
 
    aptitude install runit uml-utilities kvm screen bridge-utils lvm2 udev
+
+   If you want to be able to use di-maker, you'll also need:
+
+   aptitude install fakeroot xorriso grub2
 
  * Link programs into /usr/local/sbin:
  
