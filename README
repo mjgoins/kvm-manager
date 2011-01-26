@@ -33,15 +33,15 @@ INSTALLATION
 
  * Install dependencies:
 
-   aptitude install runit uml-utilities kvm screen bridge-utils lvm2 udev
+   apt-get install runit uml-utilities kvm screen bridge-utils lvm2 udev
 
    If you want to be able to use di-maker, you'll also need:
 
-   aptitude install fakeroot xorriso grub2
+   apt-get install fakeroot xorriso grub2
 
  * Link programs into /usr/local/sbin:
  
-   ln -s {di-maker,kvm-manager,kvm-creator} /usr/local/sbin/
+   ln -s $(pwd){di-maker,kvm-manager,kvm-creator} /usr/local/sbin/
 
  * Link screen configuration file into /etc
 
