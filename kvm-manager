@@ -41,10 +41,13 @@ up() {
     NETBOOT="$OWNERHOME/vms/$VMNAME/netboot"
     KVMARGS=
     
+    BOOTCHOICE=c
+
     if [ -e "$NETBOOT" ] ; then
-	KVMARGS="-boot n"
+	BOOTCHOICE=n
     elif [ -e "$CDISO" ] && [ -e $(readlink -f "$CDISO") ] ; then
-	KVMARGS="-cdrom $CDISO -boot d"
+	KVMARGS="-cdrom $CDISO"
+        BOOTCHOICE=d
     fi
 
     # set up the disks, if needed:
@@ -62,9 +65,18 @@ up() {
     exec chpst -u "$OWNER:$OWNERGROUP:kvm" \
         /usr/bin/screen -D -m -L -c /etc/screenrc.kvm-manager -S "$VMNAME" -t "$VMNAME" -s /bin/false \
         /usr/bin/kvm $KVMARGS \
+        -M "${MACHINE:-pc}" \
+        -enable-kvm \
+        -nodefaults \
         -nographic \
         -name "$VMNAME" \
         -m "$RAM" \
+        -boot "$BOOTCHOICE" \
+        -chardev "socket,id=monitor,path=$OWNERHOME/vms/$VMNAME/monitor,server,nowait" -mon chardev=monitor,mode=readline \
+        -rtc base=utc \
+        -usb \
+         -device virtio-balloon-pci,id=balloon0,bus=pci.0,addr=0x4 \
+        -chardev stdio,id=serial0 -device isa-serial,chardev=serial0 \
         -smp "${SMP:-1},maxcpus=${MAXCPUS:-8}" \
         -net nic,"macaddr=$MAC" \
         -net "tap,ifname=$TAP,script=no,downscript=no" \
