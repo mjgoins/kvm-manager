@@ -72,11 +72,11 @@ up() {
         -chardev "socket,id=monitor,path=$OWNERHOME/vms/$VMNAME/monitor,server,nowait" -mon chardev=monitor,mode=readline \
         -rtc base=utc \
         -usb \
-         -device virtio-balloon-pci,id=balloon0,bus=pci.0,addr=0x4 \
+        -device virtio-balloon-pci,id=balloon0,bus=pci.0 \
         -chardev stdio,id=serial0 -device isa-serial,chardev=serial0 \
         -smp "${SMP:-1},maxcpus=${MAXCPUS:-8}" \
-        -net nic,"macaddr=$MAC" \
-        -net "tap,ifname=$TAP,script=no,downscript=no" \
+        -device "virtio-net-pci,vlan=0,id=net0,mac=$MAC,bus=pci.0" \
+        -net "tap,ifname=$TAP,script=no,downscript=no,vlan=0,name=hostnet0" \
         -no-reboot
 }
 
