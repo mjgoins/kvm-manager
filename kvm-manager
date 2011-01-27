@@ -1,10 +1,9 @@
 #!/bin/sh
 
 set -e
-set -x
 
 # Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
-# Date: 2009-10-08
+# Date: 2011-01-26
 # License: GPL v3+
 
 ## expect to pull these values from the environment:
