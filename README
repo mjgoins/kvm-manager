@@ -24,6 +24,7 @@ Dependencies:
  udev : for configuring the block devices with proper permissions
  fakeroot : for rebuilding the initramfs as a regular user in di-maker
  xorriso : for grub2 to make an iso in di-maker
+ socat : so users can talk to the kvm monitor of their VMs
 
 Recommendations:
 
@@ -127,6 +128,10 @@ ACCESSING YOUR VIRTUAL SERVER
 To access the guest's serial console, do:
 
    ssh -t $GUESTNAME@host.machine screen -x $GUESTNAME
+
+To access the guest's KVM monitor, do:
+
+   ssh -t $GUESTNAME@host.machine socat vms/$GUESTNAME/monitor
 
 HACKING
 
