@@ -48,10 +48,10 @@ up() {
     fi
 
     # set up the disks, if needed:
-    [ -z "$HDA" ] || KVMARGS="$KVMARGS -hda $HDA"
-    [ -z "$HDB" ] || KVMARGS="$KVMARGS -hdb $HDB"
-    [ -z "$HDC" ] || KVMARGS="$KVMARGS -hdc $HDC"
-    [ -z "$HDD" ] || KVMARGS="$KVMARGS -hdd $HDD"
+    [ -z "$HDA" ] || KVMARGS="$KVMARGS -drive file=$HDA,if=virtio,id=hda,boot=on,format=raw"
+    [ -z "$HDB" ] || KVMARGS="$KVMARGS -drive file=$HDB,if=virtio,id=hdb,boot=on,format=raw"
+    [ -z "$HDC" ] || KVMARGS="$KVMARGS -drive file=$HDC,if=virtio,id=hdc,boot=on,format=raw"
+    [ -z "$HDD" ] || KVMARGS="$KVMARGS -drive file=$HDD,if=virtio,id=hdd,boot=on,format=raw"
 
     LOGNAME="$OWNERHOME/vms/$VMNAME/console"
     ln -sfT "$LOGNAME" ./servicelog
