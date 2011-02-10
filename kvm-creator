@@ -104,8 +104,7 @@ create() {
     validate
     adduser "$NAME" --disabled-password --gecos "$NAME KVM user,,,"
     USERHOMEDIR=$(getent passwd "$NAME" | cut -f6 -d:)
-    mkdir -p "$USERHOMEDIR/"{.ssh,vms,"vms/$NAME"}
-    chown "$NAME:$NAME" "$USERHOMEDIR/"{.ssh,vms,"vms/$NAME"}
+    chpst -u "$NAME:$NAME" mkdir -p "$USERHOMEDIR/"{.ssh,vms,"vms/$NAME"}
     if [ -f /root/.ssh/authorized_keys ]; then
         # is this really the right thing to do?
         cp /root/.ssh/authorized_keys "$USERHOMEDIR/.ssh/"
