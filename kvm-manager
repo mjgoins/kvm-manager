@@ -68,6 +68,12 @@ $1
 EOF
     }
 
+    chpst -u "$OWNER:$OWNERGROUP" \
+        /usr/bin/screen -D -m -L -c /etc/screenrc.kvm-manager -S "$VMNAME" -t "$VMNAME" socat STDIO,raw,echo=0 "UNIX-LISTEN:${CONSOLENAME}" &
+
+    # HACKERY: give a pause for the socket to get set up: 
+    sleep 2
+
     chpst -u "$OWNER:$OWNERGROUP:kvm" \
         /usr/bin/kvm $KVMARGS \
         -M "${MACHINE:-pc}" \
@@ -81,25 +87,24 @@ EOF
         -rtc base=utc \
         -usb \
         -device virtio-balloon-pci,id=balloon0,bus=pci.0 \
-        -chardev "socket,id=serial0,path=$CONSOLENAME,server,nowait" -device isa-serial,chardev=serial0 \
+        -chardev "socket,id=serial0,path=$CONSOLENAME,nowait" -device isa-serial,chardev=serial0 \
         -smp "${SMP:-1},maxcpus=${MAXCPUS:-8}" \
         -device "virtio-net-pci,vlan=0,id=net0,mac=$MAC,bus=pci.0" \
         -net "tap,ifname=$TAP,script=no,downscript=no,vlan=0,name=hostnet0" &
 
-    chpst -u "$OWNER:$OWNERGROUP" \
-        /usr/bin/screen -d -m -L -c /etc/screenrc.kvm-manager -S "$VMNAME" -t "$VMNAME" socat STDIO,raw,echo=0 "UNIX:${CONSOLENAME},retry=30"
 
     set +e
     # handle regular signals
-    trap 'kvmsend system_reset; wait' HUP
-    trap 'kvmsend system_powerdown; wait' TERM
-    trap 'kvmsend cont; wait' CONT
+    trap 'kvmsend system_reset; wait %2' HUP
+    trap 'kvmsend system_powerdown; wait %2' TERM
+    trap 'kvmsend cont; wait %2' CONT
  # use SIGINT instead of SIGSTOP for freezing the guest because
  # trapping SIGSTOP is undefined:
  # http://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_28
-    trap 'kvmsend stop; wait' INT
+    trap 'kvmsend stop; wait %2' INT
+    trap 'kill %1 ; kill %2' EXIT
 
-    wait
+    wait %2
 }
 
 
