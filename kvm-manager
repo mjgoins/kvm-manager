@@ -58,8 +58,16 @@ up() {
     if [ -e "$LOGNAME" ] ; then
 	chpst -u "$OWNER" mv "$LOGNAME" "$LOGNAME".$(date +%F_%T%z|tr : .)
     fi
+    
+    MONITORNAME="$OWNERHOME/vms/$VMNAME/monitor.socket"
 
-    exec chpst -u "$OWNER:$OWNERGROUP:kvm" \
+    kvmsend() {
+        socat STDIO "UNIX:$MONITORNAME" <<EOF
+$1
+EOF
+    }
+
+    chpst -u "$OWNER:$OWNERGROUP:kvm" \
         /usr/bin/kvm $KVMARGS \
         -M "${MACHINE:-pc}" \
         -enable-kvm \
@@ -68,14 +76,26 @@ up() {
         -name "$VMNAME" \
         -m "$RAM" \
         -boot "$BOOTCHOICE" \
-        -chardev "socket,id=monitor,path=$OWNERHOME/vms/$VMNAME/monitor.socket,server,nowait" -mon chardev=monitor,mode=readline \
+        -chardev "socket,id=monitor,path=$MONITORNAME,server,nowait" -mon chardev=monitor,mode=readline \
         -rtc base=utc \
         -usb \
         -device virtio-balloon-pci,id=balloon0,bus=pci.0 \
         -chardev "socket,id=serial0,path=$OWNERHOME/vms/$VMNAME/console.socket,server,nowait" -device isa-serial,chardev=serial0 \
         -smp "${SMP:-1},maxcpus=${MAXCPUS:-8}" \
         -device "virtio-net-pci,vlan=0,id=net0,mac=$MAC,bus=pci.0" \
-        -net "tap,ifname=$TAP,script=no,downscript=no,vlan=0,name=hostnet0"
+        -net "tap,ifname=$TAP,script=no,downscript=no,vlan=0,name=hostnet0" &
+
+    set +e
+    # handle regular signals
+    trap 'kvmsend system_reset; wait' HUP
+    trap 'kvmsend system_powerdown; wait' TERM
+    trap 'kvmsend cont; wait' CONT
+ # use SIGINT instead of SIGSTOP for freezing the guest because
+ # trapping SIGSTOP is undefined:
+ # http://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_28
+    trap 'kvmsend stop; wait' INT
+
+    wait
 }
 
 
