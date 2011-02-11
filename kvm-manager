@@ -68,9 +68,6 @@ $1
 EOF
     }
 
-    chpst -u "$OWNER:$OWNERGROUP" \
-        /usr/bin/screen -D -m -L -c /etc/screenrc.kvm-manager -S "$VMNAME" -t "$VMNAME" socat STDIO,raw,echo=0 "UNIX:${CONSOLENAME},retry=30" &
-
     chpst -u "$OWNER:$OWNERGROUP:kvm" \
         /usr/bin/kvm $KVMARGS \
         -M "${MACHINE:-pc}" \
@@ -89,19 +86,21 @@ EOF
         -device "virtio-net-pci,vlan=0,id=net0,mac=$MAC,bus=pci.0" \
         -net "tap,ifname=$TAP,script=no,downscript=no,vlan=0,name=hostnet0" &
 
+    chpst -u "$OWNER:$OWNERGROUP" \
+        /usr/bin/screen -D -m -L -c /etc/screenrc.kvm-manager -S "$VMNAME" -t "$VMNAME" socat STDIO,raw,echo=0 "UNIX:${CONSOLENAME},retry=30" &
 
     set +e
     # handle regular signals
-    trap 'kvmsend system_reset; wait %2' HUP
-    trap 'kvmsend system_powerdown; wait %2' TERM
-    trap 'kvmsend cont; wait %2' CONT
+    trap 'kvmsend system_reset; wait %1' HUP
+    trap 'kvmsend system_powerdown; wait %1' TERM
+    trap 'kvmsend cont; wait %1' CONT
  # use SIGINT instead of SIGSTOP for freezing the guest because
  # trapping SIGSTOP is undefined:
  # http://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_28
-    trap 'kvmsend stop; wait %2' INT
+    trap 'kvmsend stop; wait %1' INT
     trap 'kill %1 ; kill %2' EXIT
 
-    wait %2
+    wait %1
 }
 
 
