@@ -60,7 +60,6 @@ up() {
     fi
 
     exec chpst -u "$OWNER:$OWNERGROUP:kvm" \
-        /usr/bin/screen -D -m -L -c /etc/screenrc.kvm-manager -S "$VMNAME" -t "$VMNAME" -s /bin/false \
         /usr/bin/kvm $KVMARGS \
         -M "${MACHINE:-pc}" \
         -enable-kvm \
@@ -69,11 +68,11 @@ up() {
         -name "$VMNAME" \
         -m "$RAM" \
         -boot "$BOOTCHOICE" \
-        -chardev "socket,id=monitor,path=$OWNERHOME/vms/$VMNAME/monitor,server,nowait" -mon chardev=monitor,mode=readline \
+        -chardev "socket,id=monitor,path=$OWNERHOME/vms/$VMNAME/monitor.socket,server,nowait" -mon chardev=monitor,mode=readline \
         -rtc base=utc \
         -usb \
         -device virtio-balloon-pci,id=balloon0,bus=pci.0 \
-        -chardev stdio,id=serial0 -device isa-serial,chardev=serial0 \
+        -chardev "socket,id=serial0,path=$OWNERHOME/vms/$VNAME/console.socket,server,nowait" -device isa-serial,chardev=serial0 \
         -smp "${SMP:-1},maxcpus=${MAXCPUS:-8}" \
         -device "virtio-net-pci,vlan=0,id=net0,mac=$MAC,bus=pci.0" \
         -net "tap,ifname=$TAP,script=no,downscript=no,vlan=0,name=hostnet0" \
