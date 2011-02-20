@@ -47,6 +47,13 @@ up() {
         BOOTCHOICE=d
     fi
 
+    for disk in "$HDA" "$HDB" "HDC" "HDD"; do
+        if printf "%s" "$disk" | grep '^/dev/mapper/'; then
+            mappername=$(printf "%s" "$disk" | sed 's!^/dev/mapper/!!')
+            udevadm trigger --subsystem-match=block --attr-match=dm/name="$mappername"
+        fi
+    done
+
     # set up the disks, if needed:
     [ -z "$HDA" ] || KVMARGS="$KVMARGS -drive file=$HDA,if=virtio,id=hda,boot=on,format=raw"
     [ -z "$HDB" ] || KVMARGS="$KVMARGS -drive file=$HDB,if=virtio,id=hdb,format=raw"
