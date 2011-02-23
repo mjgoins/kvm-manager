@@ -42,11 +42,11 @@ INSTALLATION
 
  * Link programs into /usr/local/sbin:
  
-   ln -s $(pwd){di-maker,kvm-manager,kvm-creator} /usr/local/sbin/
+   ln -s $(pwd)/{di-maker,kvm-manager,kvm-creator} /usr/local/sbin/
 
  * Link screen configuration file into /etc
 
-   ln -s screenrc.kvm-manager /etc/
+   ln -s $(pwd)/screenrc.kvm-manager /etc/
 
  * Configure your host network to use a bridge. If your network adaptor 
    is eth0, you can use the following in /etc/network/interfaces
