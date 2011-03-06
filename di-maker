@@ -87,6 +87,7 @@ if [ "$#" -gt 0 ]; then
     gzip -d < "$WORKDIR/$INITRAMFS" | (cd "$unpackdir" && fakeroot -i "$fstate" -s "$fstate" cpio --extract)
     cp "$@" "$unpackdir/"
     (cd "$unpackdir" && find . | fakeroot -i "$fstate" -s "$fstate" cpio --create -H newc | gzip ) > "$WORKDIR/$INITRAMFS"
+    rm -rf "$unpackdir"
 fi
 
 mkdir -p "$WORKDIR/boot/grub"
