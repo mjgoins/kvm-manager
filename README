@@ -131,7 +131,7 @@ To access the guest's serial console, do:
 
 To access the guest's KVM monitor, do:
 
-   ssh -t $GUESTNAME@host.machine socat vms/$GUESTNAME/monitor
+   ssh -t $GUESTNAME@host.machine socat vms/$GUESTNAME/monitor.socket STDIO
 
 HACKING
 
