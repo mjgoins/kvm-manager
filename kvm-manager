@@ -51,6 +51,7 @@ up() {
         if printf "%s" "$disk" | grep '^/dev/mapper/'; then
             mappername=$(printf "%s" "$disk" | sed 's!^/dev/mapper/!!')
             udevadm trigger --subsystem-match=block --attr-match=dm/name="$mappername"
+            udevadm trigger /dev/kvm
         fi
     done
 
