@@ -28,7 +28,7 @@ OWNERHOME=$(getent passwd "$OWNER" | cut -f6 -d: )
 up() {
 # bring up the network tap:
     modprobe -v tun
-    tunctl -u "$OWNER" -t "$TAP"
+    ip tuntap add dev "$TAP" mode tap user "$OWNER"
     ip link set "$TAP" up
     brctl addif br0 "$TAP"
     
@@ -115,7 +115,7 @@ EOF
 down() {
     brctl delif br0 "$TAP"
     ip link set "$TAP" down
-    tunctl -d "$TAP"
+    ip tuntap del mode tap dev "$TAP"
 # no need to lock up the block device as well, since the owner might
 # prefer to manipulate the disk directly.
 }
