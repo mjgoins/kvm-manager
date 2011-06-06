@@ -19,7 +19,7 @@ if [ -z "$VMNAME" ] ; then
     exit 1
 fi
 
-TAP="${TAP:-${NAME}}"
+TAP="${TAP:-${VMNAME}}"
 # MAC address is derived from a hash of the host's name and the guest's name:
 MAC="${MAC:-$(printf "02:%s" "$(printf "%s\0%s" "$(hostname)" "${VMNAME}" | sha256sum | sed 's/\(..\)/\1:/g' | cut -f1-5 -d:)" )}"
 
