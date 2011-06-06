@@ -54,7 +54,14 @@ INSTALLATION
   auto br0
   iface br0 inet static
     [Put your normal IP config for eth0 here...]
+    hwaddress ether xx:yy:zz:aa:bb:cc
     bridge_ports eth0
+
+  Note: explicitly setting the hwaddress of your bridge to the same
+  MAC address as your existing NIC ("ip link show eth0 | grep ether")
+  is a good idea -- it seems to avoid periods of network connectivity
+  outages for the host when new interfaces get added to or removed
+  from the bridge.
 
  * Alternately, you can create an internal-only bridge, and tell your
    host to pass traffic to it:
