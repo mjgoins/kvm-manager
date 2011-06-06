@@ -1,18 +1,37 @@
 TODO for KVM-Manager
 --------------------
 
-(much) better documentation
+ * (much) better documentation
 
-file re-organization/restructuring
+ * file re-organization/restructuring
 
-debian packaging?
+ * debian packaging?
 
-more flexibility with networking (currently only supports
+ * more flexibility with networking (currently only supports
    tun/tap-style bridging)
 
-/usr/local/sbin is hard-coded in places (e.g. in the run and finish
+ * /usr/local/sbin is hard-coded in places (e.g. in the run and finish
    scripts); it probably shouldn't be.
 
-screen logging is still sub-par, and could potentially fill the host
+ * screen logging is still sub-par, and could potentially fill the host
    disks if the kernel spew is immense -- rotate?  filter through
    svlogd somehow?  same problem as cereal.
+
+ * how do we send break signals over the serial line in the new setup?
+
+ * we aren't currently supervising the console screen well.  if the
+   user kills it, it will be gone.
+
+ * can we separate the privileges for the monitor from the privs for
+   the console?
+
+ + * can we start up the console screen first, listening on a UNIX
+   socket, and then launch kvm with the console as a client instead
+   (so that it works the other way around)?
+
+ * can we get our logs to be timestamped?
+
+ * di-maker fails if you give a full path to the iso.
+
+ * allow handing a kernel + initramfs to the guest as a special case
+   of booting
