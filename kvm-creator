@@ -25,7 +25,7 @@ UDEV_RULES_FILE="/etc/udev/rules.d/92-kvm_creator-%s.rules"
 
 ls /etc/sv/kvm/* &> /dev/null
 if [ "$?" -eq 0 ]; then
-  TAP="${5:-tap$(( $( cat /etc/sv/kvm/*/env/TAP | sed 's/^tap//' | sort -n  | tail -n 1 ) + 1 ))}"
+  TAP="${5:-${1}0}"
   MAC="${6:-$(printf "%s:%02x" "$(cat /etc/sv/kvm/*/env/MAC | sort | head -n1 | cut -f 1-5 -d: )" "$(( 0x$( cat /etc/sv/kvm/*/env/MAC | cut -f 6 -d:  | sort | tail -n 1 ) + 1 ))" )}"
 else
   TAP=tap0
