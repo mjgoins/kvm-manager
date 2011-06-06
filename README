@@ -2,7 +2,8 @@ KVM-Manager
 
 Authors: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
          Jamie McClelland <jm@mayfirst.org>
-Copyright © 2009
+         Greg Lyle <greg@stealthisemail.com>
+Copyright © 2009-2011
 License: GPL-3+
 
 This is a small set of scripts to make it relatively easy to manage a
@@ -16,7 +17,6 @@ instance's console.
 Dependencies:
 
  runit : for system supervision
- uml-utilities : for tunctl for the tun/tap interface
  kvm : for the virtual machine emulator
  socat : For communications with the monitor and console of guests
  screen : for the detached, logged serial console
@@ -34,7 +34,7 @@ INSTALLATION
 
  * Install dependencies:
 
-   apt-get install runit uml-utilities kvm screen bridge-utils lvm2 udev socat
+   apt-get install runit kvm screen bridge-utils lvm2 udev socat
 
    If you want to be able to use di-maker, you'll also need:
 
@@ -75,7 +75,7 @@ INSTALLING DEBIAN ONTO YOUR VIRTUAL SERVER
 
 To create a KVM instance, run:
 
-  kvm-creator create $GUESTNAME [ $VG [$DISKSIZE [$RAM [$TAP [$MAC] ] ] ] ]
+  kvm-creator create $GUESTNAME [ $VG [$DISKSIZE [$RAM] ] ]
 
 You can replace "create" with "demo" to see the default values for non-
 specified options.

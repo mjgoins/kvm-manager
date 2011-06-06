@@ -9,9 +9,7 @@ set -e
 ## expect to pull these values from the environment:
 # VMNAME=snapper
 # OWNER=jrollins
-# TAP=tap0
 # RAM=512
-# MAC=52:54:00:12:34:56
 # HDA=/path/to/disk0 # optional
 # HDB=/path/to/disk1 # optional
 # HDC=/path/to/disk2 # optional
@@ -20,6 +18,10 @@ set -e
 if [ -z "$VMNAME" ] ; then
     exit 1
 fi
+
+TAP="${TAP:-${NAME}}"
+# MAC address is derived from a hash of the host's name and the guest's name:
+MAC="${MAC:-$(printf "02:%s" "$(printf "%s\0%s" "$(hostname)" "${VMNAME}" | sha256sum | sed 's/\(..\)/\1:/g' | cut -f1-5 -d:)" )}"
 
 ###################
 OWNERGROUP=$(groups "$OWNER" | cut -f1 -d\  )

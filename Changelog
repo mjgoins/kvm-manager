@@ -1,0 +1,9 @@
+kvm-manager (0.1~pre0) UNRELEASED; urgency=low
+
+  * removed TAP and MAC from kvm-creator -- they are automatically
+    generated from the guest name.  kvm-manager still respects the
+    environment variables, if they are set; but admins should avoid
+    setting them from now on.
+
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Mon, 06 Jun 2011 14:45:38 -0400
+

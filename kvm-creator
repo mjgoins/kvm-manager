@@ -23,19 +23,9 @@ UDEV_RULES_FILE="/etc/udev/rules.d/92-kvm_creator-%s.rules"
 
 [ "$CMD" == "create" ] && mkdir -p /etc/sv/kvm
 
-ls /etc/sv/kvm/* &> /dev/null
-if [ "$?" -eq 0 ]; then
-  TAP="${5:-${1}0}"
-  MAC="${6:-$(printf "%s:%02x" "$(cat /etc/sv/kvm/*/env/MAC | sort | head -n1 | cut -f 1-5 -d: )" "$(( 0x$( cat /etc/sv/kvm/*/env/MAC | cut -f 6 -d:  | sort | tail -n 1 ) + 1 ))" )}"
-else
-  TAP=tap0
-  # use a locally-administered MAC address:
-  MAC=${6:-02:00:00:00:00:01}
-fi
-
 usage() {
 
-	die "USAGE: kvm-creator create|destroy|demo guestname [volumegroup [disksize [ram [tap [mac] ] ] ] ]"
+	die "USAGE: kvm-creator create|destroy|demo guestname [volumegroup [disksize [ram] ] ]"
 
 }
 
@@ -139,9 +129,7 @@ EOF
     chmod a+x "/etc/sv/kvm/$NAME/"{run,finish,log/run}
     echo "$NAME" > "/etc/sv/kvm/$NAME/env/OWNER"
     echo "$NAME" > "/etc/sv/kvm/$NAME/env/VMNAME"
-    echo "$TAP" > "/etc/sv/kvm/$NAME/env/TAP"
     echo "$RAM" > "/etc/sv/kvm/$NAME/env/RAM"
-    echo "$MAC" > "/etc/sv/kvm/$NAME/env/MAC"
     echo "$DISK" > "/etc/sv/kvm/$NAME/env/HDA"
 
 }
@@ -149,7 +137,7 @@ EOF
 demo() {
 
     validate
-    for foo in NAME VG SIZE RAM TAP MAC DISK ; do
+    for foo in NAME VG SIZE RAM DISK ; do
       echo "$foo : ${!foo}"
     done
 
