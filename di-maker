@@ -16,10 +16,6 @@ set -e
 
 output="$1"
 
-# remaining arguments should be files to re-pack into the initrd
-shift
-
-
 SUITE=${SUITE:-stable}
 ARCH=${ARCH:-amd64}
 DISTRO=${DISTRO:-debian}
@@ -28,6 +24,9 @@ if [ -z "$output" ] ; then
     printf "you must specify a file name for the image to be built" >&2
     exit 1
 fi
+
+# remaining arguments should be files to re-pack into the initrd
+shift
 
 WORKDIR=$(mktemp -d)
 
