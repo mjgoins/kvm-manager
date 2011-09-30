@@ -21,7 +21,7 @@ ARCH=${ARCH:-amd64}
 DISTRO=${DISTRO:-debian}
 
 if [ -z "$output" ] ; then
-    printf "you must specify a file name for the image to be built" >&2
+    printf "Usage: di-maker ISOFILE [FILE ...]\n" >&2
     exit 1
 fi
 
