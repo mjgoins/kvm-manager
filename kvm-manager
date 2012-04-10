@@ -104,6 +104,7 @@ EOF
     trap 'kvmsend system_reset; wait %1' HUP
     trap 'kvmsend system_powerdown; wait %1' TERM
     trap 'kvmsend cont; wait %1' CONT
+    trap 'kill -s TERM %1' QUIT
  # use SIGINT instead of SIGSTOP for freezing the guest because
  # trapping SIGSTOP is undefined:
  # http://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_28
