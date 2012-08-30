@@ -25,6 +25,7 @@ Dependencies:
  udev : for configuring the block devices with proper permissions
  fakeroot : for rebuilding the initramfs as a regular user in di-maker
  xorriso : for grub2 to make an iso in di-maker
+ genisoimage : for di-maker to work with an existing iso
 
 Recommendations:
 
