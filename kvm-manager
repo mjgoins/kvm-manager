@@ -57,8 +57,15 @@ up() {
     done
     udevadm trigger /dev/kvm
 
+    # older versions need to have at least the first disk marked as boot=on or they cannot boot.
+    if kvm --version 2>/dev/null | sed 's/.*version \([0-9.]*\).*/\1/' | grep -q '^0' ; then
+        first_disk_extra_args=",boot=on"
+    else
+        first_disk_extra_args=
+    fi
+
     # set up the disks, if needed:
-    [ -z "$HDA" ] || KVMARGS="$KVMARGS -drive file=$HDA,if=virtio,id=hda,boot=on,format=raw"
+    [ -z "$HDA" ] || KVMARGS="$KVMARGS -drive file=$HDA,if=virtio,id=hda,format=raw$first_disk_extra_args"
     [ -z "$HDB" ] || KVMARGS="$KVMARGS -drive file=$HDB,if=virtio,id=hdb,format=raw"
     [ -z "$HDC" ] || KVMARGS="$KVMARGS -drive file=$HDC,if=virtio,id=hdc,format=raw"
     [ -z "$HDD" ] || KVMARGS="$KVMARGS -drive file=$HDD,if=virtio,id=hdd,format=raw"
