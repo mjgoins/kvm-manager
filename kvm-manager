@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 set -e
 
@@ -10,10 +10,7 @@ set -e
 # VMNAME=snapper
 # OWNER=jrollins
 # RAM=512
-# HDA=/path/to/disk0 # optional
-# HDB=/path/to/disk1 # optional
-# HDC=/path/to/disk2 # optional
-# HDD=/path/to/disk3 # optional
+# HDA..HDZ=/path/to/disk # optional
 
 if [ -z "$VMNAME" ] ; then
     exit 1
@@ -49,9 +46,9 @@ up() {
         BOOTCHOICE=d
     fi
 
-    for disk in "$HDA" "$HDB" "$HDC" "$HDD"; do
-        if printf "%s" "$disk" | grep '^/dev/mapper/'; then
-            mappername=$(printf "%s" "$disk" | sed 's!^/dev/mapper/!!')
+    for disk in HDA{A..Z}; do
+        if printf "%s" "${!disk}" | grep '^/dev/mapper/'; then
+            mappername=$(printf "%s" "${!disk}" | sed 's!^/dev/mapper/!!')
             udevadm trigger --subsystem-match=block --attr-match=dm/name="$mappername"
         fi
     done
@@ -64,11 +61,14 @@ up() {
         first_disk_extra_args=
     fi
 
+    index=0
     # set up the disks, if needed:
-    [ -z "$HDA" ] || KVMARGS="$KVMARGS -drive file=$HDA,if=virtio,id=hda,format=raw$first_disk_extra_args"
-    [ -z "$HDB" ] || KVMARGS="$KVMARGS -drive file=$HDB,if=virtio,id=hdb,format=raw"
-    [ -z "$HDC" ] || KVMARGS="$KVMARGS -drive file=$HDC,if=virtio,id=hdc,format=raw"
-    [ -z "$HDD" ] || KVMARGS="$KVMARGS -drive file=$HDD,if=virtio,id=hdd,format=raw"
+    [ -z "$HDA" ] || KVMARGS="$KVMARGS -drive file=$HDA,if=virtio,index=$index,format=raw$first_disk_extra_args"
+    # loop here on everything after HDA:
+    for disk in HD{B..Z}; do
+	index=$(( $index + 1 ))
+	[ \! -b "${!disk}" ] || KVMARGS="$KVMARGS -drive file=${!disk},if=virtio,index=$index,format=raw"
+    done
 
     LOGNAME="$OWNERHOME/vms/$VMNAME/console"
     ln -sfT "$LOGNAME" ./servicelog
