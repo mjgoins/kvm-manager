@@ -46,7 +46,7 @@ up() {
         BOOTCHOICE=d
     fi
 
-    for disk in HDA{A..Z}; do
+    for disk in HD{A..Z}; do
         if printf "%s" "${!disk}" | grep '^/dev/mapper/'; then
             mappername=$(printf "%s" "${!disk}" | sed 's!^/dev/mapper/!!')
             udevadm trigger --subsystem-match=block --attr-match=dm/name="$mappername"
