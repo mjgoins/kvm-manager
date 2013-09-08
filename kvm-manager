@@ -35,11 +35,19 @@ up() {
 
     CDISO="$OWNERHOME/vms/$VMNAME/cd.iso"
     NETBOOT="$OWNERHOME/vms/$VMNAME/netboot"
+    KERNEL="$OWNERHOME/vms/$VMNAME/kernel"
+    INITRD="$OWNERHOME/vms/$VMNAME/initrd"
     KVMARGS=
+    unset KERNEL_CMDLINE
     
     BOOTCHOICE=c
 
-    if [ -e "$NETBOOT" ] ; then
+    if [ -e "$KERNEL" -a -e "$INITRD" ] ; then
+	KVMARGS="-kernel $KERNEL -initrd $INITRD"
+        if [ "$CMDLINE" ]; then
+            KERNEL_CMDLINE="$CMDLINE"
+        fi
+    elif [ -e "$NETBOOT" ] ; then
 	BOOTCHOICE=n
     elif [ -e "$CDISO" ] && [ -e $(readlink -f "$CDISO") ] ; then
 	KVMARGS="-cdrom $CDISO"
@@ -88,6 +96,7 @@ EOF
     chpst -u "$OWNER:$OWNERGROUP:kvm" \
         /usr/bin/kvm $KVMARGS \
         -M "${MACHINE:-pc}" \
+	${KERNEL_CMDLINE:+-append "$KERNEL_CMDLINE"} \
         -enable-kvm \
         -nodefaults \
         -nographic \
