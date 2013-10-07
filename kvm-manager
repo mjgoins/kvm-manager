@@ -71,11 +71,11 @@ up() {
 
     index=0
     # set up the disks, if needed:
-    [ -z "$HDA" ] || KVMARGS="$KVMARGS -drive file=$HDA,if=virtio,index=$index,format=raw$first_disk_extra_args"
+    [ -z "$HDA" ] || KVMARGS="$KVMARGS -drive file=$HDA,if=virtio,cache=none,index=$index,format=raw$first_disk_extra_args"
     # loop here on everything after HDA:
     for disk in HD{B..Z}; do
 	index=$(( $index + 1 ))
-	[ \! -b "${!disk}" ] || KVMARGS="$KVMARGS -drive file=${!disk},if=virtio,index=$index,format=raw"
+	[ \! -b "${!disk}" ] || KVMARGS="$KVMARGS -drive file=${!disk},if=virtio,cache=none,index=$index,format=raw"
     done
 
     LOGNAME="$OWNERHOME/vms/$VMNAME/console"
