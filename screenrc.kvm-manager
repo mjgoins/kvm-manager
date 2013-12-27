@@ -82,3 +82,4 @@ caption always "%{= bw}%f %{+b w}KVM console: %{+b y}%t%{-b w} %= %Y-%m-%d %c %=
 startup_message off
 defscrollback 1024
 
+defutf8 on
