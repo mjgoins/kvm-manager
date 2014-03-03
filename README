@@ -26,6 +26,7 @@ Dependencies:
  fakeroot : for rebuilding the initramfs as a regular user in di-maker
  xorriso : for grub2 to make an iso in di-maker
  genisoimage : for di-maker to work with an existing iso
+ sgabios : for early pre-bootloader (like ipxe) output
 
 Recommendations:
 
@@ -35,7 +36,7 @@ INSTALLATION
 
  * Install dependencies:
 
-   apt-get install runit kvm screen bridge-utils lvm2 udev socat
+   apt-get install runit kvm screen bridge-utils lvm2 udev socat sgabios
 
    If you want to be able to use di-maker, you'll also need:
 
