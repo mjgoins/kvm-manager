@@ -60,7 +60,7 @@ up() {
             udevadm trigger --subsystem-match=block --attr-match=dm/name="$mappername"
         fi
     done
-    udevadm trigger /dev/kvm
+    udevadm trigger --sysname-match=kvm
 
     # older versions need to have at least the first disk marked as boot=on or they cannot boot.
     if kvm --version 2>/dev/null | sed 's/.*version \([0-9.]*\).*/\1/' | grep -q '^0' ; then
