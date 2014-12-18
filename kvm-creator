@@ -15,6 +15,10 @@ SIZE="${3:-3G}"
 RAM="${4:-512}"
 DISK="/dev/mapper/${VG}-${NAME}"
 
+if [ -z "$CREATE_USER" ]; then    
+    CREATE_USER="yes"
+fi
+
 # for managing udev (we want to make sure that logical volumes get
 # created with ownership by the controlling user:
 UDEV_RULES_FILE="/etc/udev/rules.d/92-kvm_creator-%s.rules"
@@ -56,9 +60,11 @@ validate() {
   [ -z "$NAME" ] && errors=$(printf "%s\n%s" "$errors" "Please pass the name of the virtual server to create") || :
   [ -z "$VG" ] && errors=$(printf "%s\n%s" "$errors"  "Please pass the name of the volume group to use") || :
   vgs --noheadings --unbuffered -o name | tr -d ' ' | grep -q -F -x "$VG" || errors=$(printf "%s\n%s" "$errors"  "Please pass the name of the volume group to use") || :
-  getent passwd "$NAME" > /dev/null && errors=$(printf "%s\n%s" "$errors" "The username '$NAME' already exists.") || :
-  getent group "$NAME" > /dev/null && errors=$(printf "%s\n%s" "The group '$NAME' already exists.") || :
-  [ -d /home/"$NAME" ] && errors=$(printf "%s\n%s" "The directory '/home/$NAME' already exists.") || :
+  if [ "$CREATE_USER" = "yes" ]; then
+      getent passwd "$NAME" > /dev/null && errors=$(printf "%s\n%s" "$errors" "The username '$NAME' already exists.") || :
+      getent group "$NAME" > /dev/null && errors=$(printf "%s\n%s" "The group '$NAME' already exists.") || :
+      [ -d /home/"$NAME" ] && errors=$(printf "%s\n%s" "The directory '/home/$NAME' already exists.") || :
+  fi
   [ -d /etc/sv/kvm/"$NAME" ] && errors=$(printf "%s\n%s" "The directory '/etc/sv/kvm/$NAME' already exists.") || :
   [ -e $DISK ] && errors=$(printf "%s\n%s" "The logical volume $NAME already exists.") || :
   [ -e "$(udevrulename "$NAME")" ] && errors=$(printf "%s\n%s" "The udev rules file '$(udevrulename "$NAME")' already exists.") || :
@@ -92,7 +98,9 @@ create() {
 
     set -e
     validate
-    adduser "$NAME" --disabled-password --gecos "$NAME KVM user,,,"
+    if [ "$CREATE_USER" = "yes" ]; then
+        adduser "$NAME" --disabled-password --gecos "$NAME KVM user,,,"
+    fi
     USERHOMEDIR=$(getent passwd "$NAME" | cut -f6 -d:)
     chpst -u "$NAME:$NAME" mkdir -p "$USERHOMEDIR/"{.ssh,vms,"vms/$NAME"}
     if [ -f /root/.ssh/authorized_keys ]; then
