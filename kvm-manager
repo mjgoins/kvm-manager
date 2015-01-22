@@ -30,7 +30,7 @@ up() {
     modprobe -v tun
     ip tuntap add dev "$TAP" mode tap user "$OWNER"
     ip link set "$TAP" up
-    brctl addif $BRIDGE "$TAP"
+    brctl addif "$BRIDGE" "$TAP"
     
     chpst -u "$OWNER:$OWNERGROUP" mkdir -p "$OWNERHOME/vms/$VMNAME"
 
@@ -133,7 +133,7 @@ EOF
 
 
 down() {
-    brctl delif $BRIDGE "$TAP"
+    brctl delif "$BRIDGE" "$TAP"
     ip link set "$TAP" down
     ip tuntap del mode tap dev "$TAP"
 # no need to lock up the block device as well, since the owner might
