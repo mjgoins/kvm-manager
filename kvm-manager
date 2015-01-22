@@ -10,6 +10,7 @@ set -e
 # VMNAME=snapper
 # OWNER=jrollins
 # RAM=512
+# SMP=2 # optional, specify number of CPUs
 # HDA..HDZ=/path/to/disk # optional
 
 if [ -z "$VMNAME" ] ; then
