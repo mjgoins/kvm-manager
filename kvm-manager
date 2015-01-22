@@ -104,7 +104,7 @@ EOF
         -nographic \
         -name "$VMNAME" \
         -m "$RAM" \
-        -boot order=$BOOTCHOICE \
+        -boot order="$BOOTCHOICE" \
         -chardev "socket,id=monitor,path=$MONITORNAME,server,nowait" -mon chardev=monitor,mode=readline \
         -rtc base=utc \
         -usb \
