@@ -80,6 +80,10 @@ up() {
 	[ \! -b "${!disk}" ] || KVMARGS="$KVMARGS -drive file=${!disk},if=virtio,cache=none,index=$index,format=raw"
     done
 
+    if [ -e /usr/share/qemu/sgabios.bin ]; then
+        KVMARGS="$KVMARGS -device sga"
+    fi
+
     LOGNAME="$OWNERHOME/vms/$VMNAME/console"
     ln -sfT "$LOGNAME" ./servicelog
     if [ -e "$LOGNAME" ] ; then
@@ -110,7 +114,6 @@ EOF
         -usb \
         -device virtio-balloon-pci,id=balloon0,bus=pci.0 \
         -chardev "socket,id=serial0,path=$CONSOLENAME,server" -device isa-serial,chardev=serial0 \
-	-device sga \
         -smp "${SMP:-1},maxcpus=${MAXCPUS:-8}" \
         -device "virtio-net-pci,vlan=0,id=net0,mac=$MAC,bus=pci.0" \
         -net "tap,ifname=$TAP,script=no,downscript=no,vlan=0,name=hostnet0" &
