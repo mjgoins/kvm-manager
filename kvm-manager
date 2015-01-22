@@ -19,6 +19,7 @@ fi
 TAP="${TAP:-${VMNAME}0}"
 # MAC address is derived from a hash of the host's name and the guest's name:
 MAC="${MAC:-$(printf "02:%s" "$(printf "%s\0%s" "$(hostname)" "${VMNAME}" | sha256sum | sed 's/\(..\)/\1:/g' | cut -f1-5 -d:)" )}"
+BRIDGE="${BRIDGE:-br0}"
 
 ###################
 OWNERGROUP=$(groups "$OWNER" | cut -f1 -d\  )
@@ -29,7 +30,7 @@ up() {
     modprobe -v tun
     ip tuntap add dev "$TAP" mode tap user "$OWNER"
     ip link set "$TAP" up
-    brctl addif br0 "$TAP"
+    brctl addif $BRIDGE "$TAP"
     
     chpst -u "$OWNER:$OWNERGROUP" mkdir -p "$OWNERHOME/vms/$VMNAME"
 
@@ -132,7 +133,7 @@ EOF
 
 
 down() {
-    brctl delif br0 "$TAP"
+    brctl delif $BRIDGE "$TAP"
     ip link set "$TAP" down
     ip tuntap del mode tap dev "$TAP"
 # no need to lock up the block device as well, since the owner might
