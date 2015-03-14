@@ -106,7 +106,7 @@ $BOOTINSTRUCTIONS
 }
 EOF
 
-absoutput="$(pwd)/$output"
+absoutput="$(readlink -f "$output")"
 
 ## no longer using genisoimage with grub2:
 # genisoimage -R -input-charset utf-8 -b boot/grub/stage2_eltorito -no-emul-boot --boot-load-size 4 -boot-info-table "$WORKDIR"
