@@ -76,6 +76,10 @@ esac
 if ! [ -e "$output" ] ; then
     ( cd "$WORKDIR" && wget "$BASEPATH"/{$KERNEL,$INITRAMFS} )
 else
+    if ! which isoinfo > /dev/null; then
+        printf "Could not find isoinfo.\nYou probably need to install the genisoimage\npackage if you want to work with an existing .iso like '%s'.\n" "$output" >&2
+        exit 1
+    fi
     isoinfo -R -i "$output" -x "/$KERNEL" > "$WORKDIR/$KERNEL"
     isoinfo -R -i "$output" -x "/$INITRAMFS" > "$WORKDIR/$INITRAMFS"
 fi
