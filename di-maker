@@ -48,7 +48,7 @@ esac
 KERNEL=linux
 INITRAMFS=initrd.gz
 BOOTINSTRUCTIONS="
-  linux /$KERNEL verbose -- console=ttyS0,115200n8 
+  linux /$KERNEL verbose console=ttyS0,115200n8 -- console=ttyS0,115200n8 
   initrd /$INITRAMFS
 "
 
