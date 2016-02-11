@@ -137,9 +137,11 @@ EOF
 }
 
 down() {
+    set +e
     brctl delif "$BRIDGE" "$TAP"
     ip link set "$TAP" down
     ip tuntap del mode tap dev "$TAP"
+    set -e
     # no need to lock up the block device as well, since the owner might
     # prefer to manipulate the disk directly.
 }
