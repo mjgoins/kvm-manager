@@ -25,7 +25,7 @@ TODO for KVM-Manager
  * can we separate the privileges for the monitor from the privs for
    the console?
 
- + * can we start up the console screen first, listening on a UNIX
+ * can we start up the console screen first, listening on a UNIX
    socket, and then launch kvm with the console as a client instead
    (so that it works the other way around)?
 

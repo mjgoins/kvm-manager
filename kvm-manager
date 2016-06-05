@@ -1,7 +1,5 @@
 #!/bin/bash
-
-set -e
-
+#
 # Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
 # Date: 2011-01-26
 # License: GPL v3+
@@ -12,6 +10,8 @@ set -e
 # RAM=512
 # SMP=2 # optional, specify number of CPUs
 # HDA..HDZ=/path/to/disk # optional
+
+set -e
 
 if [ -z "$VMNAME" ] ; then
     exit 1
@@ -45,14 +45,14 @@ up() {
     BOOTCHOICE=c
 
     if [ -e "$KERNEL" -a -e "$INITRD" ] ; then
-	KVMARGS="-kernel $KERNEL -initrd $INITRD"
+	      KVMARGS="-kernel $KERNEL -initrd $INITRD"
         if [ "$CMDLINE" ]; then
             KERNEL_CMDLINE="$CMDLINE"
         fi
     elif [ -e "$NETBOOT" ] ; then
-	BOOTCHOICE=n
+        BOOTCHOICE=n
     elif [ -e "$CDISO" ] && [ -e $(readlink -f "$CDISO") ] ; then
-	KVMARGS="-cdrom $CDISO"
+	      KVMARGS="-cdrom $CDISO"
         BOOTCHOICE=d
     fi
 
@@ -76,8 +76,8 @@ up() {
     [ -z "$HDA" ] || KVMARGS="$KVMARGS -drive file=$HDA,if=virtio,cache=none,index=$index,format=raw$first_disk_extra_args"
     # loop here on everything after HDA:
     for disk in HD{B..Z}; do
-	index=$(( $index + 1 ))
-	[ \! -b "${!disk}" ] || KVMARGS="$KVMARGS -drive file=${!disk},if=virtio,cache=none,index=$index,format=raw"
+	      index=$(( $index + 1 ))
+	      [ \! -b "${!disk}" ] || KVMARGS="$KVMARGS -drive file=${!disk},if=virtio,cache=none,index=$index,format=raw"
     done
 
     if [ -e /usr/share/qemu/sgabios.bin ]; then
@@ -87,7 +87,7 @@ up() {
     LOGNAME="$OWNERHOME/vms/$VMNAME/console"
     ln -sfT "$LOGNAME" ./servicelog
     if [ -e "$LOGNAME" ] ; then
-	chpst -u "$OWNER" mv "$LOGNAME" "$LOGNAME".$(date +%F_%T%z|tr : .)
+	      chpst -u "$OWNER" mv "$LOGNAME" "$LOGNAME".$(date +%F_%T%z|tr : .)
     fi
     
     MONITORNAME="$OWNERHOME/vms/$VMNAME/monitor.socket"
@@ -102,7 +102,7 @@ EOF
     chpst -u "$OWNER:$OWNERGROUP:kvm" \
         /usr/bin/kvm $KVMARGS \
         -M "${MACHINE:-pc}" \
-	${KERNEL_CMDLINE:+-append "$KERNEL_CMDLINE"} \
+	      ${KERNEL_CMDLINE:+-append "$KERNEL_CMDLINE"} \
         -enable-kvm \
         -nodefaults \
         -nographic \
@@ -127,22 +127,21 @@ EOF
     trap 'kvmsend system_powerdown; wait %1' TERM
     trap 'kvmsend cont; wait %1' CONT
     trap 'kill -s TERM %1' QUIT
- # use SIGINT instead of SIGSTOP for freezing the guest because
- # trapping SIGSTOP is undefined:
- # http://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_28
+    # use SIGINT instead of SIGSTOP for freezing the guest because
+    # trapping SIGSTOP is undefined:
+    # http://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_28
     trap 'kvmsend stop; wait %1' INT
     trap 'kill %1 ; kill %2' EXIT
 
     wait %1
 }
 
-
 down() {
     brctl delif "$BRIDGE" "$TAP"
     ip link set "$TAP" down
     ip tuntap del mode tap dev "$TAP"
-# no need to lock up the block device as well, since the owner might
-# prefer to manipulate the disk directly.
+    # no need to lock up the block device as well, since the owner might
+    # prefer to manipulate the disk directly.
 }
 
 log() {

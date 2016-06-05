@@ -18,10 +18,10 @@ function convert_ram {
   echo "SERVER RAM"
   total_ram=0
   for foo in $(ls $dir); do
-      ram=$(cat $dir/$foo/env/RAM)
-      convert_ram "$ram"
-      echo "$foo $display_ram"
-      total_ram=$(( $total_ram + $display_ram ))
+    ram=$(cat $dir/$foo/env/RAM)
+    convert_ram "$ram"
+    echo "$foo $display_ram"
+    total_ram=$(( $total_ram + $display_ram ))
   done	
   echo "TOTAL $total_ram"
 } | column -t

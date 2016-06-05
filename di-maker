@@ -1,19 +1,17 @@
 #!/bin/bash
-
+#
 # Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
 # Date: 2009-10-08
 # License: GPL v3+
-
+#
+# depends on grub2
 # usage:
 #  di-maker ISOFILE [FILE ...]
 #  make a new debian installer ISO, packing any additionally-supplied files into the initramfs directly
 
 set -e
 
-# depends on grub2
-
 # specify the first argument as the new installer image:
-
 output="$1"
 
 SUITE=${SUITE:-stable}
@@ -95,7 +93,6 @@ fi
 
 mkdir -p "$WORKDIR/boot/grub"
 
-
 cat > "$WORKDIR/boot/grub/grub.cfg" <<EOF
 serial --unit=0 --speed=115200 --word=8 --parity=no --stop=1
 terminal_output serial
@@ -111,4 +108,4 @@ absoutput="$(readlink -f "$output")"
 ## no longer using genisoimage with grub2:
 # genisoimage -R -input-charset utf-8 -b boot/grub/stage2_eltorito -no-emul-boot --boot-load-size 4 -boot-info-table "$WORKDIR"
 
-(cd "$WORKDIR" && grub-mkrescue --output="$absoutput" .)
+( cd "$WORKDIR" && grub-mkrescue --output="$absoutput" . )

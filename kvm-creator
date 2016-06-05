@@ -1,9 +1,10 @@
 #!/bin/bash
-#set -x
-
+#
 # Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
 # Date: 2009-10-08
 # License: GPL v3+
+
+#set -x
 
 CMD="$1"
 shift
@@ -28,32 +29,25 @@ UDEV_RULES_FILE="/etc/udev/rules.d/92-kvm_creator-%s.rules"
 [ "$CMD" == "create" ] && mkdir -p /etc/sv/kvm
 
 usage() {
-
 	die "USAGE: kvm-creator create|destroy|demo guestname [volumegroup [disksize [ram] ] ]"
-
 }
 
 die() {
-
   echo "$1"
   exit_code=1
   [ -n "$2" ] && exit_code="$2"
   exit $exit_code
-
 }
 
 destroy() {
-
     update-service --remove "/etc/sv/kvm/$NAME"
     rm -rf "/etc/sv/kvm/$NAME"
     deluser --remove-home "$NAME"
     lvremove "$VG/$NAME"
     rm -f "$(udevrulename "$NAME")"
-
 }
 
 validate() {
-
   errors=""
 
   # Make sure none of the pieces already exist.
@@ -70,7 +64,6 @@ validate() {
   [ -e "$(udevrulename "$NAME")" ] && errors=$(printf "%s\n%s" "The udev rules file '$(udevrulename "$NAME")' already exists.") || :
 
   [ -z "$errors" ] || die "$errors"
-
 }
 
 udevrule() {
@@ -95,7 +88,6 @@ udevrulename() {
 }
 
 create() {
-
     set -e
     validate
     if [ "$CREATE_USER" = "yes" ]; then
@@ -139,16 +131,13 @@ EOF
     echo "$NAME" > "/etc/sv/kvm/$NAME/env/VMNAME"
     echo "$RAM" > "/etc/sv/kvm/$NAME/env/RAM"
     echo "$DISK" > "/etc/sv/kvm/$NAME/env/HDA"
-
 }
 
 demo() {
-
     validate
     for foo in NAME VG SIZE RAM DISK ; do
       echo "$foo : ${!foo}"
     done
-
 }
 
 [ "$CMD" != "create" ] && [ "$CMD" != "destroy" ] && [ "$CMD" != "demo" ] && usage
