@@ -10,6 +10,31 @@
 # RAM=512
 # SMP=2 # optional, specify number of CPUs
 # HDA..HDZ=/path/to/disk # optional
+#
+# The following optional arguments control disk i/o on a per disk basis.
+# All the variables start with the disk they are referencing (e.g.
+# HDA or HDB). They all require qemu 2.6 and all default to 0 (unlimited).
+# If a variable is not set, it won't be included. The qemu defaults are listed
+# below (0 means unlimited).
+# HD[A-Z]_IOPS_TOTAL=0
+# HD[A-Z]_IOPS_TOTAL_MAX=0
+# HD[A-Z]_IOPS_TOTAL_MAX_LENGTH=1
+# HD[A-Z]_IOPS_READ=0
+# HD[A-Z]_IOPS_READ_MAX=0
+# HD[A-Z]_IOPS_READ_MAX_LENGTH=1
+# HD[A-Z]_IOPS_WRITE=0
+# HD[A-Z]_IOPS_WRITE_MAX=0
+# HD[A-Z]_IOPS_WRITE_MAX_LENGTH=1
+# HD[A-Z]_IOPS_SIZE=0
+# HD[A-Z]_BPS_TOTAL=0
+# HD[A-Z]_BPS_TOTAL_MAX=0
+# HD[A-Z]_BPS_TOTAL_MAX_LENGTH=1
+# HD[A-Z]_BPS_READ=0
+# HD[A-Z]_BPS_READ_MAX=0
+# HD[A-Z]_BPS_READ_MAX_LENGTH=1
+# HD[A-Z]_BPS_WRITE=0
+# HD[A-Z]_BPS_WRITE_MAX=0
+# HD[A-Z]_BPS_WRITE_MAX_LENGTH=1
 
 set -e
 
@@ -25,6 +50,41 @@ BRIDGE="${BRIDGE:-br0}"
 ###################
 OWNERGROUP=$(groups "$OWNER" | cut -f1 -d\  )
 OWNERHOME=$(getent passwd "$OWNER" | cut -f6 -d: )
+
+kvm_version=$(kvm --version | sed -E 's/QEMU emulator version ([0-9.]+).*/\1/' | tr -d '.')
+
+# Disks can be HDA, HDB, HDC, etc. For each disk, we want to detect the
+# corresponding environment variables for disk read/write restrictions
+# (e.g. HDA_IOPS_TOTAL, BPS_READ, etc). This function builds the variable
+# disk_io_params each time it is run.
+build_disk_io_params() {
+  local disk="$1"
+  local option variable argument value
+  disk_io_params=
+
+  if [ "$kvm_version" -lt "260" ]; then
+    # Only supported in version 2.6.0 or above.
+    return
+  fi
+  # Consider the disk i/o options
+  for option in IOPS_TOTAL IOPS_TOTAL_MAX IOPS_TOTAL_MAX_LENGTH IOPS_READ \
+    IOPS_READ_MAX IOPS_READ_MAX_LENGTH IOPS_WRITE IOPS_WRITE_MAX \
+    IOPS_WRITE_MAX_LENGTH IOPS_SIZE BPS_TOTAL BPS_TOTAL_MAX BPS_TOTAL_MAX_LENGTH \
+    BPS_READ BPS_READ_MAX BPS_READ_MAX_LENGTH BPS_WRITE BPS_WRITE_MAX \
+    BPS_WRITE_MAX_LENGTH; do
+    variable="${disk}_${option}"
+    if [ -n "${!variable}" ]; then
+      value=${!variable}
+      # Convert our environment variable into the syntax qemu expects
+      # (lower case with with a dash instead of underscore).
+      argument=$(echo "$option" | sed "s/_/-/g" | tr "[:upper:]" "[:lower:]")
+
+      # The variable will be appended to an existing series of options
+      # for the disk, so we want it to start with a comma.
+      disk_io_params="${disk_io_params},throttling.${argument}=${value}"
+    fi
+  done
+}
 
 up() {
 # bring up the network tap:
@@ -73,11 +133,17 @@ up() {
 
     index=0
     # set up the disks, if needed:
-    [ -z "$HDA" ] || KVMARGS="$KVMARGS -drive file=$HDA,if=virtio,cache=none,index=$index,format=raw$first_disk_extra_args"
+    if [ -n "$HDA" ]; then
+       build_disk_io_params HDA
+       KVMARGS="$KVMARGS -drive file=$HDA,if=virtio,cache=none,index=$index,format=raw${first_disk_extra_args}${disk_io_params}"
+    fi
     # loop here on everything after HDA:
     for disk in HD{B..Z}; do
-	      index=$(( $index + 1 ))
-	      [ \! -b "${!disk}" ] || KVMARGS="$KVMARGS -drive file=${!disk},if=virtio,cache=none,index=$index,format=raw"
+      index=$(( $index + 1 ))
+      if [ -b "${!disk}" ]; then
+        build_disk_io_params "${!disk}"
+        KVMARGS="$KVMARGS -drive file=${!disk},if=virtio,cache=none,index=$index,format=raw${disk_io_params}"
+      fi
     done
 
     if [ -e /usr/share/qemu/sgabios.bin ]; then
