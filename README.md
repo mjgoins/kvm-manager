@@ -35,6 +35,7 @@ Dependencies
 
 Recommendations
 +++++++++++++++
+
  * `openssh-server` : i've been using ssh to access the vm's serial console
 
 INSTALLATION
@@ -110,7 +111,7 @@ host server and offering addresses over your bridge interface.
 
 Then, indicate that the server should boot via the network with:
 
-   touch /home/$GUESTNAME/vms/$GUESTNAME/netboot
+    touch /home/$GUESTNAME/vms/$GUESTNAME/netboot
 
 Alternatively, you can make a debian boot ISO image:
 
