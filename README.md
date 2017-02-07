@@ -5,7 +5,9 @@ Authors:
  * Daniel Kahn Gillmor <dkg@fifthhorseman.net>
  * Jamie McClelland <jm@mayfirst.org>
  * Greg Lyle <greg@stealthisemail.com>
+
 *Copyright:* © 2009-2011
+
 *License:* GPL-3+
 
 This is a small set of scripts to make it relatively easy to manage a
