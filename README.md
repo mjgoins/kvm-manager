@@ -1,7 +1,7 @@
 KVM-Manager
 ===========
 
-Authors:
+*Authors:*
  * Daniel Kahn Gillmor <dkg@fifthhorseman.net>
  * Jamie McClelland <jm@mayfirst.org>
  * Greg Lyle <greg@stealthisemail.com>
