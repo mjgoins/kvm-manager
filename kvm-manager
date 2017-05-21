@@ -141,7 +141,7 @@ up() {
     for disk in HD{B..Z}; do
       index=$(( $index + 1 ))
       if [ -b "${!disk}" ]; then
-        build_disk_io_params "${!disk}"
+        build_disk_io_params "${disk}"
         KVMARGS="$KVMARGS -drive file=${!disk},if=virtio,cache=none,index=$index,format=raw${disk_io_params}"
       fi
     done
