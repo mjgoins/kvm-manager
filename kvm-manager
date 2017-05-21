@@ -52,6 +52,7 @@ OWNERGROUP=$(groups "$OWNER" | cut -f1 -d\  )
 OWNERHOME=$(getent passwd "$OWNER" | cut -f6 -d: )
 
 kvm_version=$(kvm --version | head -n1 | sed -E 's/^QEMU emulator version ([0-9.]+).*/\1/')
+screen_version=$(screen --version | head -n1 | sed -E 's/^Screen version ([0-9.]+).*/\1/')
 
 # Disks can be HDA, HDB, HDC, etc. For each disk, we want to detect the
 # corresponding environment variables for disk read/write restrictions
@@ -184,8 +185,13 @@ EOF
         -device "virtio-net-pci,vlan=0,id=net0,mac=$MAC,bus=pci.0" \
         -net "tap,ifname=$TAP,script=no,downscript=no,vlan=0,name=hostnet0" &
 
+    local screen_log_args=-L
+    if dpkg --compare-versions "$screen_version" ge 4.05; then
+        screen_log_args="-L ./servicelog"
+    fi
+
     chpst -u "$OWNER:$OWNERGROUP" \
-        /usr/bin/screen -D -m -L ./servicelog -c /etc/screenrc.kvm-manager -S "$VMNAME" -t "$VMNAME" socat STDIO,raw,echo=0 "UNIX:${CONSOLENAME},retry=30" &
+        /usr/bin/screen -D -m $screen_log_args -c /etc/screenrc.kvm-manager -S "$VMNAME" -t "$VMNAME" socat STDIO,raw,echo=0 "UNIX:${CONSOLENAME},retry=30" &
 
     set +e
     # handle regular signals
