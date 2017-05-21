@@ -185,7 +185,7 @@ EOF
         -net "tap,ifname=$TAP,script=no,downscript=no,vlan=0,name=hostnet0" &
 
     chpst -u "$OWNER:$OWNERGROUP" \
-        /usr/bin/screen -D -m -L -c /etc/screenrc.kvm-manager -S "$VMNAME" -t "$VMNAME" socat STDIO,raw,echo=0 "UNIX:${CONSOLENAME},retry=30" &
+        /usr/bin/screen -D -m -L ./servicelog -c /etc/screenrc.kvm-manager -S "$VMNAME" -t "$VMNAME" socat STDIO,raw,echo=0 "UNIX:${CONSOLENAME},retry=30" &
 
     set +e
     # handle regular signals
