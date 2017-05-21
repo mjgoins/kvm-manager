@@ -51,7 +51,7 @@ BRIDGE="${BRIDGE:-br0}"
 OWNERGROUP=$(groups "$OWNER" | cut -f1 -d\  )
 OWNERHOME=$(getent passwd "$OWNER" | cut -f6 -d: )
 
-kvm_version=$(kvm --version | head -n1 | sed -E 's/QEMU emulator version ([0-9.]+).*/\1/' | tr -d '.')
+kvm_version=$(kvm --version | head -n1 | sed -E 's/^QEMU emulator version ([0-9.]+).*/\1/')
 
 # Disks can be HDA, HDB, HDC, etc. For each disk, we want to detect the
 # corresponding environment variables for disk read/write restrictions
@@ -62,7 +62,7 @@ build_disk_io_params() {
   local option variable argument value
   disk_io_params=
 
-  if [ "$kvm_version" -lt "260" ]; then
+  if dpkg --compare-versions "$kvm_version" lt 2.6.0; then
     # Only supported in version 2.6.0 or above.
     return
   fi
