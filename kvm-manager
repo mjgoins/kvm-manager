@@ -136,14 +136,18 @@ up() {
     # set up the disks, if needed:
     if [ -n "$HDA" ]; then
        build_disk_io_params HDA
-       KVMARGS="$KVMARGS -drive file=$HDA,if=virtio,cache=none,index=$index,format=raw${first_disk_extra_args}${disk_io_params}"
+       driver=${HDA_DRIVER:-virtio}
+       KVMARGS="$KVMARGS -drive file=$HDA,if=$driver,cache=none,index=$index,format=raw${first_disk_extra_args}${disk_io_params}"
     fi
     # loop here on everything after HDA:
     for disk in HD{B..Z}; do
       index=$(( $index + 1 ))
       if [ -b "${!disk}" ]; then
+        driver=virtio
+        driver_var_name="${disk}_DRIVER"
+        [ -n "${!driver_var_name}" ] && driver=${!driver_var_name}
         build_disk_io_params "${disk}"
-        KVMARGS="$KVMARGS -drive file=${!disk},if=virtio,cache=none,index=$index,format=raw${disk_io_params}"
+        KVMARGS="$KVMARGS -drive file=${!disk},if=$driver,cache=none,index=$index,format=raw${disk_io_params}"
       fi
     done
 
