@@ -98,6 +98,7 @@ up() {
 
     CDISO="$OWNERHOME/vms/$VMNAME/cd.iso"
     NETBOOT="$OWNERHOME/vms/$VMNAME/netboot"
+    DEBIAN_INSTALLER="$OWNERHOME/vms/$VMNAME/debian-installer"
     KERNEL="$OWNERHOME/vms/$VMNAME/kernel"
     INITRD="$OWNERHOME/vms/$VMNAME/initrd"
     KVMARGS=
@@ -110,6 +111,14 @@ up() {
         if [ "$CMDLINE" ]; then
             KERNEL_CMDLINE="$CMDLINE"
         fi
+    elif [ -e "$DEBIAN_INSTALLER" ] ; then
+        # FIXME: this should be generalized to pick the version and
+        # the architecture -- perhaps an empty $DEBIAN_INSTALLER would
+        # default to the latest sensible version, but its contents
+        # could otherwise select the version (and the arch if
+        # specified)
+	KVMARGS="-kernel /usr/lib/debian-installer/images/9/amd64/text/debian-installer/amd64/linux -initrd /usr/lib/debian-installer/images/9/amd64/text/debian-installer/amd64/initrd.gz -no-reboot"
+        KERNEL_CMDLINE="console=ttyS0,115200n8 -- console=ttyS0,115200n8"
     elif [ -e "$NETBOOT" ] ; then
         BOOTCHOICE=n
     elif [ -e "$CDISO" ] && [ -e $(readlink -f "$CDISO") ] ; then

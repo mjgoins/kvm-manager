@@ -37,7 +37,8 @@ Recommendations
 +++++++++++++++
 
  * `openssh-server` : i've been using ssh to access the vm's serial console
-
+ * `debian-installer-netboot` : having one of the d-i netboot packages installed makes guest installation easier
+ 
 INSTALLATION
 ------------
 
@@ -101,19 +102,31 @@ additional access to other users.
 At this point, your virtual server is created, however, it has no
 operating system and it has not been started.
 
-There are two options for installing debian onto the virtual server:
+There are three options for installing debian onto the virtual server:
 
+ * debian-installer
  * netboot
  * iso (like a CD install)
 
-To use netboot, make sure you have a working DHCP server running on your
-host server and offering addresses over your bridge interface.
+
+"debian-installer" is the simplest, but it requires that you have one
+of the debian-installer-netboot packages installed
+(e.g. `debian-installer-9-netboot-amd64`):
+
+    touch /home/$GUESTNAME/vms/$GUESTNAME/debian-installer
+
+Once the guest starts with the installer, you can remove this file to
+avoid booting back into the installer.
+
+To use the "netboot" method, make sure you have a working DHCP server
+running on your host server and offering addresses over your bridge
+interface.
 
 Then, indicate that the server should boot via the network with:
 
     touch /home/$GUESTNAME/vms/$GUESTNAME/netboot
 
-Alternatively, you can make a debian boot ISO image:
+Finally, you can make a debian boot ISO image:
 
  *  Make the directory /usr/local/share/ISOs
  *  Create a serial console enabled debian installer.
