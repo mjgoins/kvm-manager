@@ -119,6 +119,9 @@ up() {
         # specified)
 	KVMARGS="-kernel /usr/lib/debian-installer/images/9/amd64/text/debian-installer/amd64/linux -initrd /usr/lib/debian-installer/images/9/amd64/text/debian-installer/amd64/initrd.gz -no-reboot"
         KERNEL_CMDLINE="console=ttyS0,115200n8 -- console=ttyS0,115200n8"
+        # debian-installer should always be a one-shot, so that it reboots into
+        # normal mode:
+        rm -f "$DEBIAN_INSTALLER"
     elif [ -e "$NETBOOT" ] ; then
         BOOTCHOICE=n
     elif [ -e "$CDISO" ] && [ -e $(readlink -f "$CDISO") ] ; then
