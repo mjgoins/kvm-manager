@@ -13,15 +13,15 @@ KVM-Manager
 This is a small set of scripts to make it relatively easy to manage a
 stable of kvm instances in a fairly secure and isolated fashion.
 
-The basic model is to use runit to supervise each KVM instance, with a
-single, non-privileged user account for each instance. You can login
-via ssh as the non-privileged user and, via screen, access the 
-instance's console. 
+The basic model is to use runit or systemd to supervise each KVM instance,
+with a single, non-privileged user account for each instance. You can login
+via ssh as the non-privileged user and, via screen, access the instance's
+console.
 
 Dependencies
 ------------
 
- * `runit` : for system supervision
+ * `runit` or `systemd` : for system supervision
  * `kvm` : for the virtual machine emulator
  * `socat` : For communications with the monitor and console of guests
  * `screen` : for the detached, logged serial console
@@ -44,7 +44,11 @@ INSTALLATION
 
  * Install dependencies:
 
-        apt-get install runit kvm screen bridge-utils lvm2 udev socat sgabios
+        apt-get install kvm screen bridge-utils lvm2 udev socat sgabios
+
+    If you want to use runit instead of systemd:
+
+        apt-get install runit
 
     If you want to be able to use di-maker, you'll also need:
 
@@ -87,6 +91,10 @@ INSTALLING DEBIAN ONTO YOUR VIRTUAL SERVER
 To create a KVM instance, run:
 
     kvm-creator create $GUESTNAME [ $VG [$DISKSIZE [$RAM] ] ]
+
+If you want to use systemd instead of runit:
+
+    KM_PM=systemd kvm-creator create $GUESTNAME [ $VG [$DISKSIZE [$RAM] ] ]
 
 You can replace "create" with "demo" to see the default values for non-
 specified options.
@@ -141,9 +149,16 @@ the installer CD in the drive) with:
 STARTING YOUR VIRTUAL SERVER
 ----------------------------
 
+If you are using runit:
+
     update-service --add /etc/sv/kvm/$GUESTNAME
 
 This process adds your virtual server to the runit service directory.
+
+If you are using systemd:
+
+    systemctl enable km@$GUESTNAME.service
+    systemctl start km@$GUESTNAME.service
 
 If `/home/$GUESTNAME/vms/$GUESTNAME/cd.iso` exists, the server will
 behave as if you set the CDROM as the boot device in the bios.

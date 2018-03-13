@@ -15,6 +15,8 @@ VG="${2:-vg_$(hostname)0}"
 SIZE="${3:-3G}"
 RAM="${4:-512}"
 DISK="/dev/mapper/${VG}-${NAME}"
+# KM_PM (process manager) can be runit (default) or systemd.
+KM_PM="${KM_PM:-runit}"
 
 if [ -z "$CREATE_USER" ]; then    
     CREATE_USER="yes"
@@ -26,10 +28,34 @@ UDEV_RULES_FILE="/etc/udev/rules.d/92-kvm_creator-%s.rules"
 # Why choose 92?  /usr/share/doc/udev/README.Debian.gz says after 91
 # default permissions and ownership are set.
 
-[ "$CMD" == "create" ] && mkdir -p /etc/sv/kvm
+if [ "$CMD" == "create" ]; then
+  if [ "$KM_PM" = "runit" ]; then
+    mkdir -p /etc/sv/kvm
+  else
+    mkdir -p "/etc/kvm-manager/$NAME"
+    service_file="/etc/systemd/system/km@.service"
+    if [ ! -f "$service_file" ]; then
+      cat > "$service_file"  <<EOF
+[Unit]
+Description=KVM Manager virtual guest management script for %i
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/kvm-manager/%i/env
+ExecStart=/usr/local/sbin/kvm-manager up
+ExecStopPost=/usr/local/sbin/kvm-manager down
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
+    fi
+  fi
+fi
 
 usage() {
-	die "USAGE: kvm-creator create|destroy|demo guestname [volumegroup [disksize [ram] ] ]"
+	echo "USAGE: kvm-creator create|destroy|demo guestname [volumegroup [disksize [ram] ] ]"
+  die "The KM_PM environment variable sets the process manager: runit (default) or systemd."
 }
 
 die() {
@@ -40,16 +66,30 @@ die() {
 }
 
 destroy() {
-    update-service --remove "/etc/sv/kvm/$NAME"
-    rm -rf "/etc/sv/kvm/$NAME"
+    if [ "$KM_PM" = "runit" ]; then
+      destroyrunit
+    else
+      destroysystemd
+    fi
     deluser --remove-home "$NAME"
     lvremove "$VG/$NAME"
     rm -f "$(udevrulename "$NAME")"
 }
 
+destroysystemd() {
+  systemctl stop "km@${NAME}.service"
+  systemctl disable "km@${NAME}.service"
+}
+
+destroyrunit() {
+  update-service --remove "/etc/sv/kvm/$NAME"
+  rm -rf "/etc/sv/kvm/$NAME"
+}
+
 validate() {
   errors=""
 
+  [ "$KM_PM" != "runit" -a "$KM_PM" != "systemd" ] && errors=$(printf "%s\n" "Please set KM_PM to runit or systemd.") || :
   # Make sure none of the pieces already exist.
   [ -z "$NAME" ] && errors=$(printf "%s\n%s" "$errors" "Please pass the name of the virtual server to create") || :
   [ -z "$VG" ] && errors=$(printf "%s\n%s" "$errors"  "Please pass the name of the volume group to use") || :
@@ -59,7 +99,8 @@ validate() {
       getent group "$NAME" > /dev/null && errors=$(printf "%s\n%s" "The group '$NAME' already exists.") || :
       [ -d /home/"$NAME" ] && errors=$(printf "%s\n%s" "The directory '/home/$NAME' already exists.") || :
   fi
-  [ -d /etc/sv/kvm/"$NAME" ] && errors=$(printf "%s\n%s" "The directory '/etc/sv/kvm/$NAME' already exists.") || :
+  [ "$KM_PM" = "runit" ] && [ -d /etc/sv/kvm/"$NAME" ] && errors=$(printf "%s\n%s" "The directory '/etc/sv/kvm/$NAME' already exists.") || :
+  [ "$KM_PM" = "systemd" ] && systemctl status "$NAME" 1>/dev/null 2>/dev/null && errors=$(printf "%s\n%s" "The systemd service is running.") || :
   [ -e $DISK ] && errors=$(printf "%s\n%s" "The logical volume $NAME already exists.") || :
   [ -e "$(udevrulename "$NAME")" ] && errors=$(printf "%s\n%s" "The udev rules file '$(udevrulename "$NAME")' already exists.") || :
 
@@ -107,6 +148,22 @@ create() {
     udevrule "$VG" "$NAME" "$USERGROUP" > $(udevrulename "$NAME")
 
     lvcreate --name "$NAME" --size "$SIZE" $VG
+
+    if [ "$KM_PM" = "runit" ]; then
+      createrunit
+    else
+      createsystemd
+    fi
+}
+
+createsystemd() {
+  printf "OWNER=%s\n" "$NAME" > "/etc/kvm-manager/$NAME/env"
+  printf "VMNAME=%s\n" "$NAME" >> "/etc/kvm-manager/$NAME/env"
+  printf "RAM=%s\n" "$RAM" >> "/etc/kvm-manager/$NAME/env"
+  printf "HDA=%s\n" "$DISK" >> "/etc/kvm-manager/$NAME/env"
+}
+
+createrunit() {
     mkdir "/etc/sv/kvm/$NAME"{,/log,/env}
     cat > "/etc/sv/kvm/$NAME/log/run" <<EOF
 #!/bin/sh
