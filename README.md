@@ -157,8 +157,8 @@ This process adds your virtual server to the runit service directory.
 
 If you are using systemd:
 
-    systemctl enable km@$GUESTNAME.service
-    systemctl start km@$GUESTNAME.service
+    systemctl enable kvm-manager@$GUESTNAME.service
+    systemctl start kvm-manager@$GUESTNAME.service
 
 If `/home/$GUESTNAME/vms/$GUESTNAME/cd.iso` exists, the server will
 behave as if you set the CDROM as the boot device in the bios.

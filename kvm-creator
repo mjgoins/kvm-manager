@@ -33,7 +33,7 @@ if [ "$CMD" == "create" ]; then
     mkdir -p /etc/sv/kvm
   else
     mkdir -p "/etc/kvm-manager/$NAME"
-    service_file="/lib/systemd/system/km@.service"
+    service_file="/lib/systemd/system/kvm-manager@.service"
     if [ ! -f "$service_file" ]; then
       cat > "$service_file"  <<EOF
 [Unit]
@@ -77,8 +77,8 @@ destroy() {
 }
 
 destroysystemd() {
-  systemctl stop "km@${NAME}.service"
-  systemctl disable "km@${NAME}.service"
+  systemctl stop "kvm-manager@${NAME}.service"
+  systemctl disable "kvm-manager@${NAME}.service"
 }
 
 destroyrunit() {
