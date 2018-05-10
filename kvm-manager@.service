@@ -1,0 +1,12 @@
+[Unit]
+Description=KVM Manager virtual guest management script for %i
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/kvm-manager/%i/env
+ExecStart=/usr/local/sbin/kvm-manager up
+ExecStopPost=/usr/local/sbin/kvm-manager down
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

@@ -32,24 +32,11 @@ if [ "$CMD" == "create" ]; then
   if [ "$KM_PM" = "runit" ]; then
     mkdir -p /etc/sv/kvm
   else
-    mkdir -p "/etc/kvm-manager/$NAME"
     service_file="/lib/systemd/system/kvm-manager@.service"
-    if [ ! -f "$service_file" ]; then
-      cat > "$service_file"  <<EOF
-[Unit]
-Description=KVM Manager virtual guest management script for %i
-
-[Service]
-Type=simple
-EnvironmentFile=/etc/kvm-manager/%i/env
-ExecStart=/usr/local/sbin/kvm-manager up
-ExecStopPost=/usr/local/sbin/kvm-manager down
-Restart=always
-
-[Install]
-WantedBy=multi-user.target
-EOF
+    if [ ! -e "$service_file" ]; then
+      die "Please copy kvm-manager@.service to /lib/systemd/system/"
     fi
+    mkdir -p "/etc/kvm-manager/$NAME"
   fi
 fi
 
