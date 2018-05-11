@@ -56,7 +56,7 @@ INSTALLATION
 
  * Link programs into /usr/local/sbin:
  
-        ln -s $(pwd)/{di-maker,kvm-manager,kvm-creator, kvm-exec, kvm-prepare, kvm-stop, kvm-screen} /usr/local/sbin/
+        ln -s $(pwd)/{di-maker,kvm-manager,kvm-creator,kvm-exec,kvm-prepare,kvm-stop,kvm-stop-post,kvm-screen} /usr/local/sbin/
 
  * Link screen configuration file into /etc
 

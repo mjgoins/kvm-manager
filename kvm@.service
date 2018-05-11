@@ -9,8 +9,8 @@ PermissionsStartOnly=true
 User=%i
 ExecStartPre=/usr/local/sbin/kvm-prepare %i
 ExecStart=/usr/local/sbin/kvm-exec %i
-KillMode=none
 ExecStop=/usr/local/sbin/kvm-stop %i
+ExecStopPost=/usr/local/sbin/kvm-stop-post %i
 #Restart=always
 
 [Install]

@@ -1,0 +1,20 @@
+#!/bin/bash
+#
+# Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+# Date: 2011-01-26
+# License: GPL v3+
+
+# Pull in environment variables for this guest from /etc/kvm-manager/$1/env.
+KVM_DIR=$(dirname $(readlink -f "$0"))
+source "${KVM_DIR}/kvm-common" "$1"
+
+OWNERHOME=$(getent passwd "$OWNER" | cut -f6 -d: )
+CONSOLENAME="$OWNERHOME/vms/$VMNAME/console.socket"
+
+TAP="${TAP:-${VMNAME}0}"
+BRIDGE="${BRIDGE:-br0}"
+
+printf "De-configuring the network.\n"
+brctl delif "$BRIDGE" "$TAP" || printf "Failed to delete tap (%s) from bridge (%s).\n" "$BRIDGE" "$TAP" 2>&1
+ip link set "$TAP" down || printf "Failed to set tap (%s) down.\n" "$TAP" 2>&1
+ip tuntap del mode tap dev "$TAP" || printf "Failed to delete tap device (%s).\n" "$TAP" 2>&1

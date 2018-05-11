@@ -12,12 +12,15 @@ OWNERHOME=$(getent passwd "$OWNER" | cut -f6 -d: )
 CONSOLENAME="$OWNERHOME/vms/$VMNAME/console.socket"
 
 printf "Gracefully shutting down guest.\n"
-printf 'system_powerdown\nquit' | socat STDIO "$OWNERHOME/vms/$VMNAME/monitor.socket"
 
-TAP="${TAP:-${VMNAME}0}"
-BRIDGE="${BRIDGE:-br0}"
+# Don't let go until the guest is down (or systemd kills us).
+while [ 1 ]; do
+  printf 'system_powerdown\nquit' | socat STDIO "$OWNERHOME/vms/$VMNAME/monitor.socket"
+  # When we can no longer connect to the socket, then we exit.
+  printf 'info' | socat STDIO "$OWNERHOME/vms/$VMNAME/monitor.socket" 1>/dev/null 2>/dev/null || exit 0
 
-printf "De-configuring the network.\n"
-brctl delif "$BRIDGE" "$TAP"
-ip link set "$TAP" down
-ip tuntap del mode tap dev "$TAP"
+  # If we can continue connecting to the socket, sleep for a second and then try again.
+  sleep 1
+done
+
+
