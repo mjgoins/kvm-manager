@@ -1,0 +1,17 @@
+[Unit]
+Description=KVM Manager virtual guest management script for %i
+# First start the guest, then launch the screen session that will log it.
+Wants=kvm-screen@%i.service
+Before=kvm-screen@%i.service
+
+[Service]
+PermissionsStartOnly=true
+User=%i
+ExecStartPre=/usr/local/sbin/kvm-prepare %i
+ExecStart=/usr/local/sbin/kvm-exec %i
+KillMode=none
+ExecStop=/usr/local/sbin/kvm-stop %i
+#Restart=always
+
+[Install]
+WantedBy=multi-user.target

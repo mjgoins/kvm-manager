@@ -1,0 +1,181 @@
+#!/bin/bash
+#
+# Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+# Date: 2011-01-26
+# License: GPL v3+
+
+set -e
+
+# Pull in environment variables for this guest from /etc/kvm-manager/$1/env.
+KVM_DIR=$(dirname $(readlink -f "$0"))
+source "${KVM_DIR}/kvm-common" "$1"
+
+## expect to pull these values from the environment file:
+# VMNAME=snapper
+# OWNER=jrollins
+# RAM=512
+# SMP=2 # optional, specify number of CPUs
+# HDA..HDZ=/path/to/disk # optional
+#
+# The following optional arguments control disk i/o on a per disk basis.
+# All the variables start with the disk they are referencing (e.g.
+# HDA or HDB). They all require qemu 2.6 and all default to 0 (unlimited).
+# If a variable is not set, it won't be included. The qemu defaults are listed
+# below (0 means unlimited).
+# HD[A-Z]_IOPS_TOTAL=0
+# HD[A-Z]_IOPS_TOTAL_MAX=0
+# HD[A-Z]_IOPS_TOTAL_MAX_LENGTH=1
+# HD[A-Z]_IOPS_READ=0
+# HD[A-Z]_IOPS_READ_MAX=0
+# HD[A-Z]_IOPS_READ_MAX_LENGTH=1
+# HD[A-Z]_IOPS_WRITE=0
+# HD[A-Z]_IOPS_WRITE_MAX=0
+# HD[A-Z]_IOPS_WRITE_MAX_LENGTH=1
+# HD[A-Z]_IOPS_SIZE=0
+# HD[A-Z]_BPS_TOTAL=0
+# HD[A-Z]_BPS_TOTAL_MAX=0
+# HD[A-Z]_BPS_TOTAL_MAX_LENGTH=1
+# HD[A-Z]_BPS_READ=0
+# HD[A-Z]_BPS_READ_MAX=0
+# HD[A-Z]_BPS_READ_MAX_LENGTH=1
+# HD[A-Z]_BPS_WRITE=0
+# HD[A-Z]_BPS_WRITE_MAX=0
+# HD[A-Z]_BPS_WRITE_MAX_LENGTH=1
+
+TAP="${TAP:-${VMNAME}0}"
+# MAC address is derived from a hash of the host's name and the guest's name:
+MAC="${MAC:-$(printf "02:%s" "$(printf "%s\0%s" "$(hostname)" "${VMNAME}" | sha256sum | sed 's/\(..\)/\1:/g' | cut -f1-5 -d:)" )}"
+BRIDGE="${BRIDGE:-br0}"
+
+###################
+OWNERGROUP=$(groups "$OWNER" | cut -f1 -d\  )
+OWNERHOME=$(getent passwd "$OWNER" | cut -f6 -d: )
+
+kvm_version=$(kvm --version | head -n1 | sed -E 's/^QEMU emulator version ([0-9.]+).*/\1/')
+printf "Running kvm version %s.\n" "$kvm_version"
+
+# Disks can be HDA, HDB, HDC, etc. For each disk, we want to detect the
+# corresponding environment variables for disk read/write restrictions
+# (e.g. HDA_IOPS_TOTAL, BPS_READ, etc). This function builds the variable
+# disk_io_params each time it is run.
+build_disk_io_params() {
+  local disk="$1"
+  local option variable argument value
+  disk_io_params=
+
+  if dpkg --compare-versions "$kvm_version" lt 2.6.0; then
+    # Only supported in version 2.6.0 or above.
+    return
+  fi
+  # Consider the disk i/o options
+  for option in IOPS_TOTAL IOPS_TOTAL_MAX IOPS_TOTAL_MAX_LENGTH IOPS_READ \
+    IOPS_READ_MAX IOPS_READ_MAX_LENGTH IOPS_WRITE IOPS_WRITE_MAX \
+    IOPS_WRITE_MAX_LENGTH IOPS_SIZE BPS_TOTAL BPS_TOTAL_MAX BPS_TOTAL_MAX_LENGTH \
+    BPS_READ BPS_READ_MAX BPS_READ_MAX_LENGTH BPS_WRITE BPS_WRITE_MAX \
+    BPS_WRITE_MAX_LENGTH; do
+    variable="${disk}_${option}"
+    if [ -n "${!variable}" ]; then
+      value=${!variable}
+      # Convert our environment variable into the syntax qemu expects
+      # (lower case with with a dash instead of underscore).
+      argument=$(echo "$option" | sed "s/_/-/g" | tr "[:upper:]" "[:lower:]")
+
+      # The variable will be appended to an existing series of options
+      # for the disk, so we want it to start with a comma.
+      disk_io_params="${disk_io_params},throttling.${argument}=${value}"
+    fi
+  done
+}
+
+mkdir -p "$OWNERHOME/vms/$VMNAME"
+
+CDISO="$OWNERHOME/vms/$VMNAME/cd.iso"
+NETBOOT="$OWNERHOME/vms/$VMNAME/netboot"
+DEBIAN_INSTALLER="$OWNERHOME/vms/$VMNAME/debian-installer"
+KERNEL="$OWNERHOME/vms/$VMNAME/kernel"
+INITRD="$OWNERHOME/vms/$VMNAME/initrd"
+KVMARGS=
+unset KERNEL_CMDLINE
+
+BOOTCHOICE=c
+
+if [ -e "$KERNEL" -a -e "$INITRD" ] ; then
+    KVMARGS="-kernel $KERNEL -initrd $INITRD"
+    if [ "$CMDLINE" ]; then
+        KERNEL_CMDLINE="$CMDLINE"
+    fi
+elif [ -e "$DEBIAN_INSTALLER" ] ; then
+    # FIXME: this should be generalized to pick the version and
+    # the architecture -- perhaps an empty $DEBIAN_INSTALLER would
+    # default to the latest sensible version, but its contents
+    # could otherwise select the version (and the arch if
+    # specified)
+    KVMARGS="-kernel /usr/lib/debian-installer/images/9/amd64/text/debian-installer/amd64/linux -initrd /usr/lib/debian-installer/images/9/amd64/text/debian-installer/amd64/initrd.gz -no-reboot"
+    KERNEL_CMDLINE="console=ttyS0,115200n8 -- console=ttyS0,115200n8"
+    # debian-installer should always be a one-shot, so that it reboots into
+    # normal mode:
+    rm -f "$DEBIAN_INSTALLER"
+elif [ -e "$NETBOOT" ] ; then
+    BOOTCHOICE=n
+elif [ -e "$CDISO" ] && [ -e $(readlink -f "$CDISO") ] ; then
+    KVMARGS="-cdrom $CDISO"
+    BOOTCHOICE=d
+fi
+
+# older versions need to have at least the first disk marked as boot=on or they cannot boot.
+if kvm --version 2>/dev/null | sed 's/.*version \([0-9.]*\).*/\1/' | grep -q '^0' ; then
+    first_disk_extra_args=",boot=on"
+else
+    first_disk_extra_args=
+fi
+
+index=0
+# set up the disks, if needed:
+if [ -n "$HDA" ]; then
+   build_disk_io_params HDA
+   driver=${HDA_DRIVER:-virtio}
+   KVMARGS="$KVMARGS -drive file=$HDA,if=$driver,cache=none,index=$index,format=raw${first_disk_extra_args}${disk_io_params}"
+fi
+# loop here on everything after HDA:
+for disk in HD{B..Z}; do
+  index=$(( $index + 1 ))
+  if [ -b "${!disk}" ]; then
+    driver=virtio
+    driver_var_name="${disk}_DRIVER"
+    [ -n "${!driver_var_name}" ] && driver=${!driver_var_name}
+    build_disk_io_params "${disk}"
+    KVMARGS="$KVMARGS -drive file=${!disk},if=$driver,cache=none,index=$index,format=raw${disk_io_params}"
+  fi
+done
+
+if [ -e /usr/share/qemu/sgabios.bin ]; then
+    KVMARGS="$KVMARGS -device sga"
+fi
+
+LOGNAME="$OWNERHOME/vms/$VMNAME/console"
+if [ -e "$LOGNAME" ] ; then
+    mv "$LOGNAME" "$LOGNAME".$(date +%F_%T%z|tr : .)
+fi
+
+MONITORNAME="$OWNERHOME/vms/$VMNAME/monitor.socket"
+CONSOLENAME="$OWNERHOME/vms/$VMNAME/console.socket"
+
+printf "Launching kvm with KVMARGS: %s\n" "$KVMARGS"
+exec /usr/bin/kvm $KVMARGS \
+    -M "${MACHINE:-pc}" \
+    ${KERNEL_CMDLINE:+-append "$KERNEL_CMDLINE"} \
+    -enable-kvm \
+    -nodefaults \
+    -nographic \
+    -name "$VMNAME" \
+    -m "$RAM" \
+    -boot order="$BOOTCHOICE" \
+    -chardev "socket,id=monitor,path=$MONITORNAME,server,nowait" -mon chardev=monitor,mode=readline \
+    -rtc base=utc \
+    -usb \
+    -device virtio-balloon-pci,id=balloon0,bus=pci.0 \
+    -chardev "socket,id=serial0,path=$CONSOLENAME,server" -device isa-serial,chardev=serial0 \
+    -smp "${SMP:-1},maxcpus=${MAXCPUS:-8}" \
+    -device "virtio-net-pci,vlan=0,id=net0,mac=$MAC,bus=pci.0" \
+    -net "tap,ifname=$TAP,script=no,downscript=no,vlan=0,name=hostnet0"
+

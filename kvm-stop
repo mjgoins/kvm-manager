@@ -1,0 +1,23 @@
+#!/bin/bash
+#
+# Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+# Date: 2011-01-26
+# License: GPL v3+
+
+# Pull in environment variables for this guest from /etc/kvm-manager/$1/env.
+KVM_DIR=$(dirname $(readlink -f "$0"))
+source "${KVM_DIR}/kvm-common" "$1"
+
+OWNERHOME=$(getent passwd "$OWNER" | cut -f6 -d: )
+CONSOLENAME="$OWNERHOME/vms/$VMNAME/console.socket"
+
+printf "Gracefully shutting down guest.\n"
+printf 'system_powerdown\nquit' | socat STDIO "$OWNERHOME/vms/$VNAME/monitor.socket"
+
+TAP="${TAP:-${VMNAME}0}"
+BRIDGE="${BRIDGE:-br0}"
+
+printf "De-configuring the network.\n"
+brctl delif "$BRIDGE" "$TAP"
+ip link set "$TAP" down
+ip tuntap del mode tap dev "$TAP"

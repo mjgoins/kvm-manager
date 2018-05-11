@@ -56,15 +56,15 @@ INSTALLATION
 
  * Link programs into /usr/local/sbin:
  
-        ln -s $(pwd)/{di-maker,kvm-manager,kvm-creator} /usr/local/sbin/
+        ln -s $(pwd)/{di-maker,kvm-manager,kvm-creator, kvm-exec, kvm-prepare, kvm-stop, kvm-screen} /usr/local/sbin/
 
  * Link screen configuration file into /etc
 
         ln -s $(pwd)/screenrc.kvm-manager /etc/
 
- * If using systemd, link systemd service file into /lib/systemd/system
+ * If using systemd, link systemd service files into /lib/systemd/system
 
-        ln -s $(pwd)/kvm-manager@.service /lib/systemd/system/
+        ln -s $(pwd)/{kvm, kvm-screen}@.service /lib/systemd/system/
 
  * Configure your host network to use a bridge. If your network adaptor 
    is eth0, you can use the following in /etc/network/interfaces
@@ -161,8 +161,8 @@ This process adds your virtual server to the runit service directory.
 
 If you are using systemd:
 
-    systemctl enable kvm-manager@$GUESTNAME.service
-    systemctl start kvm-manager@$GUESTNAME.service
+    systemctl enable kvm@$GUESTNAME.service
+    systemctl start kvm@$GUESTNAME.service
 
 If `/home/$GUESTNAME/vms/$GUESTNAME/cd.iso` exists, the server will
 behave as if you set the CDROM as the boot device in the bios.

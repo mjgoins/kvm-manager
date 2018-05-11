@@ -1,0 +1,13 @@
+#!/bin/bash
+
+VMNAME="$1"
+if [ -z "$VMNAME" ] ; then
+  printf "Please pass VMANE as first argument.\n" 1>&2
+  exit 1
+fi
+ENV="/etc/kvm-manager/${VMNAME}/env"
+if [ ! -f "$ENV" ]; then
+  printf "Can't find environment file (%s).\n" "$ENV" 1>&2
+  exit 1
+fi
+source "$ENV"

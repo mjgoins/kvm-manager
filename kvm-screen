@@ -1,0 +1,25 @@
+#!/bin/bash
+#
+# Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+# Date: 2011-01-26
+# License: GPL v3+
+
+# Pull in environment variables for this guest from /etc/kvm-manager/$1/env.
+KVM_DIR=$(dirname $(readlink -f "$0"))
+source "${KVM_DIR}/kvm-common" "$1"
+
+OWNERHOME=$(getent passwd "$OWNER" | cut -f6 -d: )
+CONSOLENAME="$OWNERHOME/vms/$VMNAME/console.socket"
+
+LOGNAME="$OWNERHOME/vms/$VMNAME/console"
+
+screen_version=$(screen --version | head -n1 | sed -E 's/^Screen version ([0-9.]+).*/\1/')
+screen_log_args=-L
+if dpkg --compare-versions "$screen_version" ge 4.06.02; then
+  screen_log_args="-L -Logfile ${LOGNAME}"
+elif dpkg --compare-versions "$screen_version" ge 4.05; then
+  screen_log_args="-L ${LOGNAME}"
+fi
+
+exec /usr/bin/screen -D -m $screen_log_args -c /etc/screenrc.kvm-manager -S "$VMNAME" -t "$VMNAME" socat STDIO,raw,echo=0 "UNIX:${CONSOLENAME},retry=30"
+

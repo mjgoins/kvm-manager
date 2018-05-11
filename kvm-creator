@@ -32,10 +32,11 @@ if [ "$CMD" == "create" ]; then
   if [ "$KM_PM" = "runit" ]; then
     mkdir -p /etc/sv/kvm
   else
-    service_file="/lib/systemd/system/kvm-manager@.service"
-    if [ ! -e "$service_file" ]; then
-      die "Please copy kvm-manager@.service to /lib/systemd/system/"
-    fi
+    for file in kvm kvm-screen; do
+      if [ ! -e "/lib/systemd/system/${file}@.service" ]; then
+        die "Please copy ${file}@.service to /lib/systemd/system/"
+      fi
+    done
     mkdir -p "/etc/kvm-manager/$NAME"
   fi
 fi
@@ -64,8 +65,8 @@ destroy() {
 }
 
 destroysystemd() {
-  systemctl stop "kvm-manager@${NAME}.service"
-  systemctl disable "kvm-manager@${NAME}.service"
+  systemctl stop "kvm@${NAME}.service"
+  systemctl disable "kvm@${NAME}.service"
 }
 
 destroyrunit() {
@@ -148,6 +149,7 @@ createsystemd() {
   printf "VMNAME=%s\n" "$NAME" >> "/etc/kvm-manager/$NAME/env"
   printf "RAM=%s\n" "$RAM" >> "/etc/kvm-manager/$NAME/env"
   printf "HDA=%s\n" "$DISK" >> "/etc/kvm-manager/$NAME/env"
+  adduser "$NAME" kvm
 }
 
 createrunit() {

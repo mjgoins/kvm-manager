@@ -1,0 +1,40 @@
+#!/bin/bash
+#
+# Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+# Date: 2011-01-26
+# License: GPL v3+
+
+## expect to pull these values from the environment:
+# VMNAME=snapper
+# OWNER=jrollins
+# HDA..HDZ=/path/to/disk # optional
+
+set -e
+
+printf  "Running kvm-prepare\n"
+
+# Pull in environment variables for this guest from /etc/kvm-manager/$1/env.
+KVM_DIR=$(dirname $(readlink -f "$0"))
+source "${KVM_DIR}/kvm-common" "$1"
+
+TAP="${TAP:-${VMNAME}0}"
+# MAC address is derived from a hash of the host's name and the guest's name:
+MAC="${MAC:-$(printf "02:%s" "$(printf "%s\0%s" "$(hostname)" "${VMNAME}" | sha256sum | sed 's/\(..\)/\1:/g' | cut -f1-5 -d:)" )}"
+BRIDGE="${BRIDGE:-br0}"
+
+# bring up the network tap:
+printf "Configuring tap (%s) on bridge (%s).\n" "$TAP" "$BRIDGE"
+modprobe -v tun
+ip tuntap add dev "$TAP" mode tap user "$OWNER"
+ip link set "$TAP" up
+brctl addif "$BRIDGE" "$TAP"
+
+for disk in HD{A..Z}; do
+    if printf "%s" "${!disk}" | grep '^/dev/mapper/'; then
+        mappername=$(printf "%s" "${!disk}" | sed 's!^/dev/mapper/!!')
+        udevadm trigger --subsystem-match=block --attr-match=dm/name="$mappername"
+    fi
+done
+udevadm trigger --sysname-match=kvm
+printf "kvm-prepare completed successfully\n"
+

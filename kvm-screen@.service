@@ -1,0 +1,7 @@
+[Unit]
+Description=Provides a screen session for KVM Manager virtual guest (%i). 
+
+[Service]
+User=%i
+ExecStart=/usr/local/sbin/kvm-screen %i
+
