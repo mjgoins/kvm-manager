@@ -12,7 +12,7 @@ OWNERHOME=$(getent passwd "$OWNER" | cut -f6 -d: )
 CONSOLENAME="$OWNERHOME/vms/$VMNAME/console.socket"
 
 printf "Gracefully shutting down guest.\n"
-printf 'system_powerdown\nquit' | socat STDIO "$OWNERHOME/vms/$VNAME/monitor.socket"
+printf 'system_powerdown\nquit' | socat STDIO "$OWNERHOME/vms/$VMNAME/monitor.socket"
 
 TAP="${TAP:-${VMNAME}0}"
 BRIDGE="${BRIDGE:-br0}"
