@@ -42,6 +42,12 @@ source "${KVM_DIR}/kvm-common" "$1"
 # HD[A-Z]_BPS_WRITE_MAX=0
 # HD[A-Z]_BPS_WRITE_MAX_LENGTH=1
 
+running_as=$(whoami)
+if [ "$running_as" != "$OWNER" ]; then
+  printf "Please run as %s.\n" "$OWNER" 2>&1
+  exit 1
+fi
+
 TAP="${TAP:-${VMNAME}0}"
 # MAC address is derived from a hash of the host's name and the guest's name:
 MAC="${MAC:-$(printf "02:%s" "$(printf "%s\0%s" "$(hostname)" "${VMNAME}" | sha256sum | sed 's/\(..\)/\1:/g' | cut -f1-5 -d:)" )}"
