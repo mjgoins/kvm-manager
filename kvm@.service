@@ -7,10 +7,10 @@ Before=kvm-screen@%i.service
 [Service]
 PermissionsStartOnly=true
 User=%i
-ExecStartPre=/usr/local/sbin/kvm-prepare %i
-ExecStart=/usr/local/sbin/kvm-exec %i
+ExecStartPre=/usr/local/sbin/kvm-setup %i
+ExecStart=/usr/local/sbin/kvm-start %i
 ExecStop=/usr/local/sbin/kvm-stop %i
-ExecStopPost=/usr/local/sbin/kvm-stop-post %i
+ExecStopPost=/usr/local/sbin/kvm-teardown %i
 Restart=always
 
 [Install]
