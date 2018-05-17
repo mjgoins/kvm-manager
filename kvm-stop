@@ -1,5 +1,18 @@
 #!/bin/bash
 #
+# kvm-stop: send powerdown command to qemu socket.
+#
+# usage: kvm-stop <guest>
+#
+# kvm-stop gathers variables from /etc/kvm-manager/<guest>/env to figure out
+# the owner and path to the guest monitor socket. Then it sends the socket
+# a shutdown command so it can cleanly stop the guest. It waits until it is no
+# longer possible to connect to the socket before returning.
+#
+# kvm-stop is intended to be run as the ExecStop command of a systemd service
+# file. kvm-stop waits until the guest is completely down to prevent systemd
+# from killing the process prior to a clean shutdown.
+#
 # Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
 # Date: 2011-01-26
 # License: GPL v3+
@@ -16,6 +29,7 @@ printf "Gracefully shutting down guest.\n"
 # Don't let go until the guest is down (or systemd kills us).
 while [ 1 ]; do
   printf 'system_powerdown\nquit' | socat STDIO "$OWNERHOME/vms/$VMNAME/monitor.socket"
+
   # When we can no longer connect to the socket, then we exit.
   printf 'info' | socat STDIO "$OWNERHOME/vms/$VMNAME/monitor.socket" 1>/dev/null 2>/dev/null || exit 0
 

@@ -1,4 +1,13 @@
 #!/bin/bash
+
+# kvm-start: Launch kvm with arguments based on the configuration file.
+#
+# Usage: kvm-start <guest>
+#
+# kvm-start gathers variables from /etc/kvm-manager/<guest>/env. Based on these
+# variables, it generates arguments that are passed to the kvm command. The kvm
+# command is launched via exec. It can be launched manually but is designed to
+# be started by systemd.
 #
 # Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
 # Date: 2011-01-26

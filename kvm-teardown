@@ -1,5 +1,12 @@
 #!/bin/bash
 #
+# kvm-teardown - de-configure network for kvm guest based on the configuration file.
+#
+# usage: kvm-teardown <guest>
+#
+# kvm-teardown gathers variables from /etc/kvm-manager/<guest>/env. Based on these
+# variables, it removes the TAP network device from the bridge and then deletes it.
+#
 # Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
 # Date: 2011-01-26
 # License: GPL v3+
