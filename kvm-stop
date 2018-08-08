@@ -30,8 +30,14 @@ printf "Gracefully shutting down guest.\n"
 while [ 1 ]; do
   printf 'system_powerdown\nquit' | socat STDIO "$OWNERHOME/vms/$VMNAME/monitor.socket"
 
-  # When we can no longer connect to the socket, then we exit.
-  printf 'info' | socat STDIO "$OWNERHOME/vms/$VMNAME/monitor.socket" 1>/dev/null 2>/dev/null || exit 0
+  # When we can no longer connect to the socket, then we exit. That could be due to 
+  # socat returning an error, our qemu returning nothing in response to the info
+  # command.
+  out=$(printf 'info' | socat STDIO "$OWNERHOME/vms/$VMNAME/monitor.socket" 2>/dev/null)
+  if [ -z "$out" -o "$?" -ne "0" ]; then
+    # monitor.socket is no longer responding, let's exit.
+    exit 0
+  fi
 
   # If we can continue connecting to the socket, sleep for a second and then try again.
   sleep 1

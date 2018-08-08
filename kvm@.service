@@ -12,6 +12,7 @@ ExecStart=/usr/local/sbin/kvm-start %i
 ExecStop=/usr/local/sbin/kvm-stop %i
 ExecStopPost=/usr/local/sbin/kvm-teardown %i
 Restart=always
+RestartSec=2
 
 [Install]
 WantedBy=multi-user.target
