@@ -62,9 +62,9 @@ INSTALLATION
 
         ln -s $(pwd)/screenrc.kvm-manager /etc/
 
- * If using systemd, link systemd service files into /lib/systemd/system
+ * If using systemd, copy systemd service files into /lib/systemd/system
 
-        ln -s $(pwd)/{kvm, kvm-screen}@.service /lib/systemd/system/
+        cp $(pwd)/{kvm, kvm-screen}@.service /lib/systemd/system/
 
  * Configure your host network to use a bridge. If your network adaptor 
    is eth0, you can use the following in /etc/network/interfaces
