@@ -22,6 +22,13 @@ if [ -z "$CREATE_USER" ]; then
     CREATE_USER="yes"
 fi
 
+die() {
+  echo "$1"
+  exit_code=1
+  [ -n "$2" ] && exit_code="$2"
+  exit $exit_code
+}
+
 # for managing udev (we want to make sure that logical volumes get
 # created with ownership by the controlling user:
 UDEV_RULES_FILE="/etc/udev/rules.d/92-kvm_creator-%s.rules"
@@ -44,13 +51,6 @@ fi
 usage() {
 	echo "USAGE: kvm-creator create|destroy|demo guestname [volumegroup [disksize [ram] ] ]"
   die "The KM_PM environment variable sets the process manager: runit (default) or systemd."
-}
-
-die() {
-  echo "$1"
-  exit_code=1
-  [ -n "$2" ] && exit_code="$2"
-  exit $exit_code
 }
 
 destroy() {
