@@ -7,6 +7,7 @@ Before=kvm-screen@%i.service
 [Service]
 PermissionsStartOnly=true
 User=%i
+SupplementaryGroups=kvm
 ExecStartPre=/usr/local/sbin/kvm-setup %i
 ExecStart=/usr/local/sbin/kvm-start %i
 ExecStop=/usr/local/sbin/kvm-stop %i

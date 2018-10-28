@@ -149,7 +149,6 @@ createsystemd() {
   printf "VMNAME=%s\n" "$NAME" >> "/etc/kvm-manager/$NAME/env"
   printf "RAM=%s\n" "$RAM" >> "/etc/kvm-manager/$NAME/env"
   printf "HDA=%s\n" "$DISK" >> "/etc/kvm-manager/$NAME/env"
-  adduser "$NAME" kvm
 }
 
 createrunit() {
