@@ -115,9 +115,6 @@ of the debian-installer-netboot packages installed
 
     touch /home/$GUESTNAME/vms/$GUESTNAME/debian-installer
 
-Once the guest starts with the installer, you can remove this file to
-avoid booting back into the installer.
-
 To use the "netboot" method, make sure you have a working DHCP server
 running on your host server and offering addresses over your bridge
 interface.
