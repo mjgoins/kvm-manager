@@ -40,8 +40,8 @@ if [ "$CMD" == "create" ]; then
     mkdir -p /etc/sv/kvm
   else
     for file in kvm kvm-screen; do
-      if [ ! -e "/lib/systemd/system/${file}@.service" ]; then
-        die "Please copy ${file}@.service to /lib/systemd/system/"
+      if [ ! -e "/etc/systemd/system/${file}@.service" ]; then
+        die "Please copy ${file}@.service to /etc/systemd/system/"
       fi
     done
     mkdir -p "/etc/kvm-manager/$NAME"
