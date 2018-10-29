@@ -7,10 +7,6 @@
 # kvm-setup gathers variables from /etc/kvm-manager/<guest>/env. Based on these
 # variables, it creates a TAP network device and adds it to the bridge. It also
 # triggers udev to ensure the specified disks have the proper ownership set.
-#
-# Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
-# Date: 2011-01-26
-# License: GPL v3+
 
 set -e
 

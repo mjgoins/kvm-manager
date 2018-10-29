@@ -12,10 +12,6 @@
 # kvm-stop is intended to be run as the ExecStop command of a systemd service
 # file. kvm-stop waits until the guest is completely down to prevent systemd
 # from killing the process prior to a clean shutdown.
-#
-# Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
-# Date: 2011-01-26
-# License: GPL v3+
 
 # Pull in environment variables for this guest from /etc/kvm-manager/$1/env.
 KVM_DIR=$(dirname $(readlink -f "$0"))

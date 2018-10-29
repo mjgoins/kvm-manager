@@ -6,7 +6,7 @@ KVM-Manager
  * Jamie McClelland <jm@mayfirst.org>
  * Greg Lyle <greg@stealthisemail.com>
 
-*Copyright:* © 2009-2011
+*Copyright:* © 2009-2018
 
 *License:* GPL-3+
 

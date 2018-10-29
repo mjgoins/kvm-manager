@@ -8,10 +8,6 @@
 # variables, it generates arguments that are passed to the kvm command. The kvm
 # command is launched via exec. It can be launched manually but is designed to
 # be started by systemd.
-#
-# Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
-# Date: 2011-01-26
-# License: GPL v3+
 
 set -e
 
