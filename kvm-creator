@@ -15,8 +15,17 @@ VG="${2:-vg_$(hostname)0}"
 SIZE="${3:-3G}"
 RAM="${4:-512}"
 DISK="/dev/mapper/${VG}-${NAME}"
-# KM_PM (process manager) can be runit (default) or systemd.
-KM_PM="${KM_PM:-runit}"
+# KM_PM (process manager) can be runit or systemd.
+if [ -z "$KM_PM" ]; then
+    # we use the presence of /usr/bin/sv as an indication that runit
+    # is installed.
+    if which sv >/dev/null; then
+        KM_PM=runit
+    else
+        # if runit isn't installed, use systemd:
+        KM_PM=systemd
+    fi
+fi
 
 if [ -z "$CREATE_USER" ]; then    
     CREATE_USER="yes"
