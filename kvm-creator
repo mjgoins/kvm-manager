@@ -10,8 +10,28 @@ CMD="$1"
 shift
 
 NAME="$1"
-# FIXME: make this default to the only vg (if only one vg exists), or to vg_$(hostname0) or $(hostname), if those VGs exist
-VG="${2:-vg_$(hostname)0}"
+# if only one vg exists, use it.  otherwise, if "vg_$(hostname)0" or
+# "$(hostname)" or "vm" exists, use it:
+if [ -z "$2" ]; then
+    declare -a AVAIL_VG=($(vgs -o name --noheading))
+    if [ ${#AVAIL_VG} = 1 ]; then
+       VG="${AVAIL_VG[0]}"
+    else
+        for x in vg_$(hostname)0 $(hostname) vm; do
+            for y in "${AVAIL_VG[@]}"; do
+                if [ "$x" = "$y" ]; then
+                    VG="$x"
+                    break
+                fi
+            done
+            if [ -n "$VG" ]; then
+                break
+            fi
+        done
+    fi
+else
+    VG="$2"
+fi
 SIZE="${3:-3G}"
 RAM="${4:-512}"
 DISK="/dev/mapper/${VG}-${NAME}"
