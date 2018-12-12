@@ -59,7 +59,7 @@ fi
 
 usage() {
 	echo "USAGE: kvm-creator create|destroy|demo guestname [volumegroup [disksize [ram] ] ]"
-  die "The KM_PM environment variable sets the process manager: runit (default) or systemd."
+  die "The KM_PM environment variable sets the process manager: runit (if installed) or systemd."
 }
 
 destroy() {
