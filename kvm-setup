@@ -10,7 +10,7 @@
 
 set -e
 
-printf  "Running kvm-prepare\n"
+printf  "Running kvm-setup\n"
 
 # Pull in environment variables for this guest from /etc/kvm-manager/$1/env.
 KVM_DIR=$(dirname $(readlink -f "$0"))
