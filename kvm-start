@@ -188,6 +188,6 @@ exec /usr/bin/kvm $KVMARGS \
     -device virtio-rng-pci,max-bytes=128,period=1000 \
     -chardev "socket,id=serial0,path=$CONSOLENAME,server" -device isa-serial,chardev=serial0 \
     -smp "${SMP:-1},maxcpus=${MAXCPUS:-8}" \
-    -device "virtio-net-pci,vlan=0,id=net0,mac=$MAC,bus=pci.0" \
-    -net "tap,ifname=$TAP,script=no,downscript=no,vlan=0,name=hostnet0"
+    -device "virtio-net-pci,netdev=n1,id=net0,mac=$MAC,bus=pci.0" \
+    -netdev "tap,id=n1,ifname=$TAP,script=no,downscript=no"
 
