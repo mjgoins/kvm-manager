@@ -203,7 +203,9 @@ EOF
         -netdev "tap,id=n1,ifname=$TAP,script=no,downscript=no" &
 
     local screen_log_args=-L
-    if dpkg --compare-versions "$screen_version" ge 4.05; then
+    if dpkg --compare-versions "$screen_version" ge 4.6; then
+        screen_log_args="-L -Logfile ./servicelog"
+    elif dpkg --compare-versions "$screen_version" ge 4.05; then
         screen_log_args="-L ./servicelog"
     fi
 
