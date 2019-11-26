@@ -142,20 +142,34 @@ fi
 
 index=0
 # set up the disks, if needed:
+
+# Check for scsi disks. If we are using scsi-hd, we must define a scsi bus
+# to avoid an "No 'SCSI' bus found for device 'scsi-hd'" error. We should only
+# have to define it once.
+for disk in HD{A..Z}; do
+  if [ -b "${!disk}" ]; then
+    driver_var_name="${disk}_DRIVER"
+    if [ -n "${!driver_var_name}" -a  "${!driver_var_name}" = "scsi-hd" ]; then
+      KVMARGS="$KVMARGS -device virtio-scsi-pci,id=scsi"
+      break
+    fi
+  fi
+done
+
 if [ -n "$HDA" ]; then
    build_disk_io_params HDA
-   driver=${HDA_DRIVER:-virtio}
-   KVMARGS="$KVMARGS -drive file=$HDA,if=$driver,cache=none,index=$index,format=raw${first_disk_extra_args}${disk_io_params}"
+   driver=${HDA_DRIVER:-virtio-blk-pci}
+   KVMARGS="$KVMARGS -drive file=$HDA,if=none,cache=none,id=disk-${index},format=raw${first_disk_extra_args}${disk_io_params} -device ${driver},drive=disk-${index},bootindex=1"
 fi
 # loop here on everything after HDA:
 for disk in HD{B..Z}; do
   index=$(( $index + 1 ))
   if [ -b "${!disk}" ]; then
-    driver=virtio
+    driver=virtio-blk-pci
     driver_var_name="${disk}_DRIVER"
     [ -n "${!driver_var_name}" ] && driver=${!driver_var_name}
     build_disk_io_params "${disk}"
-    KVMARGS="$KVMARGS -drive file=${!disk},if=$driver,cache=none,index=$index,format=raw${disk_io_params}"
+    KVMARGS="$KVMARGS -drive file=${!disk},if=none,cache=none,id=disk-${index},format=raw${disk_io_params} -device ${driver},drive=disk-${index}"
   fi
 done
 
