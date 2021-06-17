@@ -1,27 +1,54 @@
 #!/bin/bash
 
-dir=/etc/sv/kvm
+total_ram=0
+total_ram_active=0
 
-function convert_ram {
-	display_ram=
-	ram=$(echo "$1" | tr [:upper:] [:lower:])
-	label=$(echo $ram| tr -d "[0-9]+")
-	value=${ram%$label}
-	if [ -z "$label" ] || [ "$label" = "mb" ]; then
-		display_ram=$value
-	else	
-		display_ram=$(( $value * 1024 ))
-	fi
+convert_ram() {
+  # Separate the label (if any) from the value.
+  local ram="$1"
+  local raw_label="$(echo $ram | tr -d "[0-9]+")"
+  local value="${ram%$raw_label}"
+
+  # Convert units to lower case (GB => gb) and get the label if any and
+  # reduce to just one character (gb => g or mb => m).
+  local label=$(echo "${raw_label:0:1}" | tr "[:upper:]" "[:lower:]")
+  if [ -z "$label" -o "$label" = "m" ]; then
+    display_ram=$value
+  elif [ "$label" = "g" ]; then
+    display_ram=$(( $value * 1024 ))
+  else  
+    printf "Unknown label: '%s' for ram '%s' \n" "$label" "$ram"
+    exit 1
+  fi
 }
 
-{
-  echo "SERVER RAM"
-  total_ram=0
-  for foo in $(ls $dir); do
-    ram=$(cat $dir/$foo/env/RAM)
+printf "\n"
+printf "RAM SERVER\n"
+dir=/etc/kvm-manager
+for server in $(ls "$dir" | grep -v late_command); do
+  display_ram=0
+  path="${dir}/${server}/env"
+  if [ -f "$path" ]; then
+    ram=$(grep ^RAM "$dir/$server/env" | cut -d= -f2)
+    if [ -z "$ram" ]; then
+      printf "Can't determine RAM for '%s'\n" "$server"
+      exit 1
+    fi
     convert_ram "$ram"
-    echo "$foo $display_ram"
-    total_ram=$(( $total_ram + $display_ram ))
-  done	
-  echo "TOTAL $total_ram"
-} | column -t
+    total_ram=$(( "$total_ram" + "$display_ram" ))
+
+    # Count running servers differently then inactive ones.
+    active_state=$(systemctl show "kvm@$server" | grep ^ActiveState| cut -d= -f2)
+    if [ "$active_state" = "inactive" ]; then
+      display_state="(inactive)"
+    else
+      display_state=
+      total_ram_active=$(( "$total_ram_active" + "$display_ram" ))
+    fi
+    printf "%s %s %s\n" "$display_ram" "$server" "$display_state"
+  fi
+done  
+
+printf "\n"
+printf "TOTAL: %s\n" "$total_ram"
+printf "TOTAL (active servers only): %s\n" "$total_ram_active"
