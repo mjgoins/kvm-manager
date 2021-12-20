@@ -108,6 +108,8 @@ INITRD="$OWNERHOME/vms/$VMNAME/initrd"
 KVMARGS=
 unset KERNEL_CMDLINE
 
+declare -a KVM_DISK_DEVS=()
+
 BOOTCHOICE=c
 
 if [ -e "$KERNEL" -a -e "$INITRD" ] ; then
@@ -150,7 +152,7 @@ for disk in HD{A..Z}; do
   if [ -b "${!disk}" ]; then
     driver_var_name="${disk}_DRIVER"
     if [ -n "${!driver_var_name}" -a  "${!driver_var_name}" = "scsi-hd" ]; then
-      KVMARGS="$KVMARGS -device virtio-scsi-pci,id=scsi"
+      KVM_DISK_DEVS+=(-device virtio-scsi-pci,id=scsi)
       break
     fi
   fi
@@ -159,7 +161,8 @@ done
 if [ -n "$HDA" ]; then
    build_disk_io_params HDA
    driver=${HDA_DRIVER:-virtio-blk-pci}
-   KVMARGS="$KVMARGS -drive file=$HDA,if=none,cache=none,id=disk-${index},format=raw${first_disk_extra_args}${disk_io_params} -device ${driver},drive=disk-${index},bootindex=1"
+   KVMARGS="$KVMARGS -drive file=$HDA,if=none,cache=none,id=disk-${index},format=raw${first_disk_extra_args}${disk_io_params}"
+   KVM_DISK_DEVS+=(-device "${driver},drive=disk-${index},bootindex=1")
 fi
 # loop here on everything after HDA:
 for disk in HD{B..Z}; do
@@ -169,7 +172,8 @@ for disk in HD{B..Z}; do
     driver_var_name="${disk}_DRIVER"
     [ -n "${!driver_var_name}" ] && driver=${!driver_var_name}
     build_disk_io_params "${disk}"
-    KVMARGS="$KVMARGS -drive file=${!disk},if=none,cache=none,id=disk-${index},format=raw${disk_io_params} -device ${driver},drive=disk-${index}"
+    KVMARGS="$KVMARGS -drive file=${!disk},if=none,cache=none,id=disk-${index},format=raw${disk_io_params}"
+    KVM_DISK_DEVS+=(-device "${driver},drive=disk-${index}")
   fi
 done
 
@@ -203,5 +207,5 @@ exec /usr/bin/kvm $KVMARGS \
     -chardev "socket,id=serial0,path=$CONSOLENAME,server" -device isa-serial,chardev=serial0 \
     -smp "${SMP:-1},maxcpus=${MAXCPUS:-8}" \
     -device "virtio-net-pci,netdev=n1,id=net0,mac=$MAC,bus=pci.0" \
-    -netdev "tap,id=n1,ifname=$TAP,script=no,downscript=no"
-
+    -netdev "tap,id=n1,ifname=$TAP,script=no,downscript=no" \
+    "${KVM_DISK_DEVS[@]}"
