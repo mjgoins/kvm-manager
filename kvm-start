@@ -123,7 +123,7 @@ elif [ -e "$DEBIAN_INSTALLER" ] ; then
     # default to the latest sensible version, but its contents
     # could otherwise select the version (and the arch if
     # specified)
-    KVMARGS="-kernel /usr/lib/debian-installer/images/10/amd64/text/debian-installer/amd64/linux -initrd /usr/lib/debian-installer/images/10/amd64/text/debian-installer/amd64/initrd.gz -no-reboot"
+    KVMARGS="-kernel /usr/lib/debian-installer/images/11/amd64/text/debian-installer/amd64/linux -initrd /usr/lib/debian-installer/images/11/amd64/text/debian-installer/amd64/initrd.gz -no-reboot"
     KERNEL_CMDLINE="console=ttyS0,115200n8 -- console=ttyS0,115200n8"
     # debian-installer should always be a one-shot, so that it reboots into
     # normal mode:
