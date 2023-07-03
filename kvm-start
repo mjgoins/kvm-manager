@@ -199,12 +199,12 @@ exec /usr/bin/kvm $KVMARGS \
     -name "$VMNAME" \
     -m "$RAM" \
     -boot order="$BOOTCHOICE",menu=on \
-    -chardev "socket,id=monitor,path=$MONITORNAME,server,nowait" -mon chardev=monitor,mode=readline \
+    -chardev "socket,id=monitor,path=$MONITORNAME,server=on,wait=off" -mon chardev=monitor,mode=readline \
     -rtc base=utc \
     -usb \
     -device virtio-balloon-pci,id=balloon0,bus=pci.0 \
     -device virtio-rng-pci,max-bytes=128,period=1000 \
-    -chardev "socket,id=serial0,path=$CONSOLENAME,server" -device isa-serial,chardev=serial0 \
+    -chardev "socket,id=serial0,path=$CONSOLENAME,server=on" -device isa-serial,chardev=serial0 \
     -smp "${SMP:-1},maxcpus=${MAXCPUS:-8}" \
     -device "virtio-net-pci,netdev=n1,id=net0,mac=$MAC,bus=pci.0" \
     -netdev "tap,id=n1,ifname=$TAP,script=no,downscript=no" \
