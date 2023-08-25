@@ -210,7 +210,7 @@ EOF
     fi
 
     chpst -u "$OWNER:$OWNERGROUP" \
-        /usr/bin/screen -D -m $screen_log_args -c /etc/screenrc.kvm-manager -S "$VMNAME" -t "$VMNAME" socat STDIO,raw,echo=0 "UNIX:${CONSOLENAME},retry=30" &
+        /usr/bin/screen -D -m $screen_log_args -c /etc/screenrc.kvm-manager -S "$VMNAME" -t "$VMNAME" socat STDIO,raw,echo=0 "UNIX-CONNECT:${CONSOLENAME},retry=30" &
 
     set +e
     # handle regular signals
